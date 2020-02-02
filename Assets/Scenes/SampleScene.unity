@@ -397,6 +397,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1001636798}
+  - component: {fileID: 1001636799}
   m_Layer: 0
   m_Name: NetManager
   m_TagString: Untagged
@@ -418,6 +419,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1001636799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001636797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab2ad1415324eeb4c8f90126113db517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  idCount: 0
+  connectionCount: 0
 --- !u!1001 &4058750242155580440
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -429,6 +444,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Octree
+      objectReference: {fileID: 0}
+    - target: {fileID: 4058750242087082169, guid: 1763cfaf53659d34784ebc6ee10b771e,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4058750242087082171, guid: 1763cfaf53659d34784ebc6ee10b771e,
         type: 3}
@@ -499,6 +519,11 @@ PrefabInstance:
         type: 3}
       propertyPath: color.b
       value: 0.029678345
+      objectReference: {fileID: 0}
+    - target: {fileID: 4058750242087082170, guid: 1763cfaf53659d34784ebc6ee10b771e,
+        type: 3}
+      propertyPath: maxDepth
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1763cfaf53659d34784ebc6ee10b771e, type: 3}

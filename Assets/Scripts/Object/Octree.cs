@@ -36,7 +36,7 @@ public class Octree : MonoBehaviour
     Vector3[] changePos = new Vector3[8];
     Vector3 pos;
     float size = 1;
-    int maxDepth = 4;
+    public int maxDepth = 2;
     public GameObject cube;
     public Color color;
     Transform tran;
@@ -98,14 +98,8 @@ public class Octree : MonoBehaviour
                     Vector3 newPos = changePos[i];
                     newPos *= size / 4;
                     newPos += pos;
-
-                    //checkdist
-                    float dist = Vector3.Distance(newPos, this.pos);
-                    // if (dist < 3.0f){
-                    //node.nodes[i] = new OctreeNode();
                     setup(node.node[i], size / 2, newPos);
-
-                    //setup(node.node[i]);
+                    
                 }
             }
         }

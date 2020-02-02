@@ -11,16 +11,18 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections;
+using UnityEngine;
 
 namespace Server
 {
-    class Server
+    class Server : MonoBehaviour
     {
         int port;
         TcpListener listen;
 
-        int idCount; // which id to give
-        int connectionCount; // counts how many are currently connected
+
+        [SerializeField] int idCount; // which id to give
+        [SerializeField] int connectionCount; // counts how many are currently connected
 
 
         protected Dictionary<Socket, ClientData> clients; //hashtable of clients
@@ -40,15 +42,18 @@ namespace Server
 
         Queue<Message> messages;
    
-        public Server(int port)
+        private void Start()
         {
-            this.port = port;
+            this.port = 55555;
             listen = new TcpListener(IPAddress.Any, port);
             idCount = 0; connectionCount = 0;
             clients = new Dictionary<Socket, ClientData>();
             messages = new Queue<Message>();
+            StartServer();
             
         }
+        private void update() { }
+
         public void StartServer()
         {
             //start thread to listen
@@ -74,14 +79,14 @@ namespace Server
                 while (true)
                 {
                     if (connectionCount == 0) canRecieve = false;
-                    Console.WriteLine("Waiting on clients");
+                    Debug.Log("Waiting on clients");
                     client = listen.AcceptTcpClient();
                     socket = client.Client;
                     stream = client.GetStream();
                     ipAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
                     clientData = new ClientData(idCount++, socket, stream, ipAddress);
                     clients.Add(socket, clientData);
-                    Console.WriteLine("Client Added");
+                    Debug.Log("Client Added");
 
                     //This is where the login notification will go*******************************
                     Message msg = new Message();
@@ -105,7 +110,7 @@ namespace Server
             }
             catch (SocketException exception)
             {
-                Console.WriteLine("SocketException: {0}", exception);
+                Debug.Log(String.Format("SocketException: {0}", exception.ToString()));
                 listen.Stop();
             }
             
@@ -131,7 +136,7 @@ namespace Server
                     foreach (KeyValuePair<Socket, ClientData> data in clients)
                     {
                         listOfClients.Add(data.Value.socket);
-                        //Console.WriteLine("Reset Listener");
+                        //Debug.Log("Reset Listener");
                     }
 
 
@@ -148,41 +153,68 @@ namespace Server
                         //https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=netframework-4.8
 
                         int inData;
-                        NetworkStream stream = clients[(Socket)listOfClients[i]].stream;
-                        try {
-                            while ((inData = stream.Read(buffer, 0, buffer.Length)) != 0)
-                            {
-                                message = System.Text.Encoding.ASCII.GetString(buffer, 0, inData);
-
-                                Console.WriteLine("Received: {0}", message);
-                                //message = message.ToUpper();
-
-                                /************** FOR TESTING PURPOSES************************************************
-                                Byte[] byteMessage = System.Text.Encoding.ASCII.GetBytes(message);
-                                if (message.Length > 0)
+                        try
+                        {
+                            NetworkStream stream = clients[(Socket)listOfClients[i]].stream;
+                        
+                            try
+                            { 
+                                while ((inData = stream.Read(buffer, 0, buffer.Length)) != 0)
                                 {
-                                    foreach (KeyValuePair<Socket, ClientData> data in clients)
+                                    message = System.Text.Encoding.ASCII.GetString(buffer, 0, inData);
+
+                                    Debug.Log(String.Format("Received: {0}", message));
+                                    //message = message.ToUpper();
+
+                                    /************** FOR TESTING PURPOSES************************************************/
+                                    Byte[] byteMessage = System.Text.Encoding.ASCII.GetBytes(message);
+                                    Queue<ClientData> remove = new Queue<ClientData>();
+                                    if (message.Length > 0)
                                     {
-                                        //Console.WriteLine("Reset Listener");
-                                        data.Value.stream.Write(byteMessage, 0, byteMessage.Length);
-                                        Console.WriteLine("Sent: {0}", message);
-                                    }
-                                }***********************************************************************************/
+                                        foreach (KeyValuePair<Socket, ClientData> data in clients)
+                                        {
+                                            try
+                                            {
+                                                //Debug.Log("Reset Listener");
+                                                data.Value.stream.Write(byteMessage, 0, byteMessage.Length);
+                                                Debug.Log(String.Format("Sent: {0}", message));
+                                            }
+                                            catch (Exception exception)
+                                            {
+                                                remove.Enqueue(data.Value);
+                                                //clients.Remove(data.Value.socket);
+                                            }
+                                        }
+                                        while (remove.Count > 0)
+                                        {
+                                            ClientData cd = remove.Dequeue();
+                                            Debug.Log(String.Format("Socket Removed from Foreach ID: {0}", cd.id));
+                                            clients.Remove(cd.socket);
 
-                                //if there is not more data to be read exit
-                                if (!stream.DataAvailable)
-                                {
-                                    //store message in queue
-                                    break;
+                                            connectionCount--;
+                                        }
+                                    }/***********************************************************************************/
+
+                                    //if there is not more data to be read exit
+                                    if (!stream.DataAvailable)
+                                    {
+                                        //store message in queue
+                                        break;
+                                    }
                                 }
                             }
+                            catch (Exception exception)
+                            {
+                                int id = clients[(Socket)listOfClients[i]].id;
+                                clients.Remove((Socket)listOfClients[i]);
+                                Debug.Log(String.Format("Socket Removed from last catch ID: {0} {1}", id, exception));
+                                //Debug.Log("Exception {0}", exception);
+                            }
                         }
-                        catch (Exception exception)
+                        catch (KeyNotFoundException exception)
                         {
-                            int id = clients[(Socket)listOfClients[i]].id;
-                            clients.Remove((Socket)listOfClients[i]);
-                            Console.WriteLine("Socket Removed ID: {0}", id);
-                            //Console.WriteLine("Exception {0}", exception);
+                            /*Debug.Log(String.Format("Socket Removed from Foreach ID: {0}", clients[(Socket)listOfClients[i]].id));
+                            clients.Remove(clients[(Socket)listOfClients[i]].socket);*/
                         }
                     }
                 }
@@ -192,15 +224,15 @@ namespace Server
         }
 
 
-        static void Main(string[] args)
-        {
-            //Console.WriteLine("Hellow world 1");
-            Server serv = new Server(55555);
-            serv.StartServer();
+        //static void Main(string[] args)
+        //{
+        //    //Debug.Log("Hellow world 1");
+        //    Server serv = new Server(55555);
+        //    serv.StartServer();
 
 
 
-            Console.Read();
-        }
+        //    Console.Read();
+        //}
     }
 }
