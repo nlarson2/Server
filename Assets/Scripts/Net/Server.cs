@@ -44,8 +44,9 @@ namespace Server
    
         private void Start()
         {
-            this.port = 55555;
+            this.port = 50000;
             listen = new TcpListener(IPAddress.Any, port);
+            Debug.Log("Listening on Port 55555");
             idCount = 0; connectionCount = 0;
             clients = new Dictionary<Socket, ClientData>();
             messages = new Queue<Message>();
@@ -222,7 +223,10 @@ namespace Server
             }
 
         }
-
+        private void OnApplicationQuit()
+        {
+            listen.Stop();
+        }
 
         //static void Main(string[] args)
         //{
