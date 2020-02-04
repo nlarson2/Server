@@ -11,20 +11,33 @@ public class VoxelModel : MonoBehaviour
     {
         public Color color;
         public GameObject obj;
+        //FBLRTB
+        public bool[] face = new bool[6];
+
+        public Cube()
+        {
+            for(int i = 0; i < face.Length; i++)
+            {
+                face[i] = false;
+            }
+        }
     }
 
 
     public int size;
-    public Cube[,,] voxel;
+    public Cube[,,] voxel = null;
     public GameObject cube;
     public float scale;
     int voxelArraySize;
     public string inputfile;
-    Vector3[] vertices;
-    int[] triangles;
+    List<Vector3> vertices = new List<Vector3>();
+    List<int> triangles = new List<int>();
+    Mesh mesh;
 
     void Start()
     {
+        mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = mesh;
 
         string[] lines = File.ReadAllLines(this.inputfile);
         string size = lines[0], scale = lines[1];
@@ -39,7 +52,11 @@ public class VoxelModel : MonoBehaviour
         string[] sub;
         int h, w, d;
         float r, g, b;
-        for(int i = 2; i < lines.Length; i++)
+
+        float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
+        Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
+
+        for (int i = 2; i < lines.Length; i++)
         {
             sub = lines[i].Split(' ');
             int.TryParse(sub[0], out h);
@@ -51,14 +68,113 @@ public class VoxelModel : MonoBehaviour
 
             voxel[h, w, d] = new Cube();
             voxel[h, w, d].color = new Color(r, g, b);
-            float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
-            Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
-            GameObject obj = Instantiate(cube, startPos + (new Vector3(-w, -h, -d)) * this.scale, new Quaternion());
+           
+            /*GameObject obj = Instantiate(cube, startPos + (new Vector3(-w, -h, -d)) * this.scale, new Quaternion());
             obj.transform.localScale = Vector3.one * this.scale;
-            obj.GetComponent<MeshRenderer>().material.color = voxel[h, w, d].color;
+            obj.GetComponent<MeshRenderer>().material.color = voxel[h, w, d].color;*/
+           
         }
+
+        //func it up here
+        checkFaces();
+        mesh.Clear();
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+
     }
 
+    Vector3 getPos(int w, int h, int d)
+    {
+        float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
+        Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
+        return startPos + (new Vector3(-w, -h, -d)) * this.scale;
+    }
+    
+    //Check Face visibility
+    //
+    public void checkFaces()
+    {
+        float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
+        Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
+        float adjust = this.scale / 2;
+        int vertexCount = 0;
+        //Vector3 cubePos = startPos  + (new Vector3(-w, -h, -d)) * this.scale;
+        //loop through and turn on faces that are visible
+        for (int d = 0; d < voxelArraySize; d++)
+        {
+            for (int h = 0; h < voxelArraySize; h++)
+            {
+                for (int w = 0; w < voxelArraySize; w++)
+                {
+                    if (voxel[h, w, d] == null)
+                        continue;
+
+                    Vector3 pos = getPos(w, h, d);
+                    //FBLRTB
+                    //front / back
+                    if(d - 1 > 0 && d + 1 < voxelArraySize)
+                    {
+
+                        voxel[h, w, d].face[0] = voxel[h, w, d - 1] != null ? false : true;
+                        if (voxel[h,w,d].face[0])
+                        {
+                            //
+                            vertices.Add(pos + new Vector3(-adjust,  adjust, adjust)); //LUF 0
+                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust)); //LDF 1
+                            vertices.Add(pos + new Vector3( adjust, -adjust, adjust)); //RDF 2 
+                            vertices.Add(pos + new Vector3( adjust,  adjust, adjust)); //RUF 3
+                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
+                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
+                            vertexCount += 4;
+                            Debug.Log("VERTICES MADE");
+                        }
+                        voxel[h, w, d].face[1] = voxel[h, w, d + 1] != null ? false : true;
+                        if (voxel[h, w, d].face[1])
+                        {
+                            /*vertices.Add(pos + new Vector3( adjust,  adjust, -adjust)); //RUB
+                            vertices.Add(pos + new Vector3( adjust, -adjust, -adjust)); //RDB
+                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //LDB
+                            vertices.Add(pos + new Vector3(-adjust,  adjust, -adjust)); //LUB
+                            triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 4); triangles.Add(vertexCount + 2);
+                            triangles.Add(vertexCount + 4); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
+                            vertexCount += 4;*/
+                        }
+
+                    }
+            
+                    //left / right
+                    if (w - 1 > 0 && w + 1 < voxelArraySize)
+                    {
+                        voxel[h, w, d].face[2] = voxel[h, w - 1, d] != null ? false : true;
+                        if (voxel[h, w, d].face[2])
+                        {
+
+                        }
+                        voxel[h, w, d].face[3] = voxel[h, w + 1, d] != null ? false : true;
+                        if (voxel[h, w, d].face[3])
+                        {
+
+                        }
+                    }
+                    
+                    //top / bottom
+                    if (h - 1 > 0 && h + 1 < voxelArraySize)
+                    {
+                        voxel[h, w, d].face[4] = voxel[h - 1, w, d] != null ? false : true;
+                        if (voxel[h, w, d].face[4])
+                        {
+
+                        }
+                        voxel[h, w, d].face[5] = voxel[h + 1, w, d] != null ? false : true;
+                        if (voxel[h, w, d].face[5])
+                        {
+
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Update is called once per frame
     float time = 0;
