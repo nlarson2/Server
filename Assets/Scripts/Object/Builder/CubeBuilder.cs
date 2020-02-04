@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Cube : MonoBehaviour
+public class CubeBuilder : MonoBehaviour
 {
     public bool collided = false;
     float time = 0;

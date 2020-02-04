@@ -174,7 +174,7 @@ public class OctreeBuilder : MonoBehaviour
                 tmp = nodes.Dequeue();
                 try
                 {
-                    if (tmp.obj.GetComponent<Cube>().collided)
+                    if (tmp.obj.GetComponent<CubeBuilder>().collided)
                         writer.WriteLine(tmp.ToString());
                 }
                 catch (Exception e) { }
