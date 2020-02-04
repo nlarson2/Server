@@ -118,26 +118,27 @@ public class VoxelModel : MonoBehaviour
                         voxel[h, w, d].face[0] = voxel[h, w, d - 1] != null ? false : true;
                         if (voxel[h,w,d].face[0])
                         {
-                            //
-                            vertices.Add(pos + new Vector3(-adjust,  adjust, adjust)); //LUF 0
+
+                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust)); //LUF 0
                             vertices.Add(pos + new Vector3(-adjust, -adjust, adjust)); //LDF 1
-                            vertices.Add(pos + new Vector3( adjust, -adjust, adjust)); //RDF 2 
-                            vertices.Add(pos + new Vector3( adjust,  adjust, adjust)); //RUF 3
+                            vertices.Add(pos + new Vector3(adjust, -adjust, adjust)); //RDF 2 
+                            vertices.Add(pos + new Vector3(adjust, adjust, adjust)); //RUF 3
                             triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
                             triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
                             vertexCount += 4;
-                            Debug.Log("VERTICES MADE");
+                            Debug.Log("FRONT VERTICES MADE");
                         }
                         voxel[h, w, d].face[1] = voxel[h, w, d + 1] != null ? false : true;
                         if (voxel[h, w, d].face[1])
                         {
-                            /*vertices.Add(pos + new Vector3( adjust,  adjust, -adjust)); //RUB
-                            vertices.Add(pos + new Vector3( adjust, -adjust, -adjust)); //RDB
+                            vertices.Add(pos + new Vector3(adjust, adjust, -adjust)); //RUB
+                            vertices.Add(pos + new Vector3(adjust, -adjust, -adjust)); //RDB
                             vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //LDB
-                            vertices.Add(pos + new Vector3(-adjust,  adjust, -adjust)); //LUB
-                            triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 4); triangles.Add(vertexCount + 2);
-                            triangles.Add(vertexCount + 4); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
-                            vertexCount += 4;*/
+                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUB
+                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
+                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
+                            vertexCount += 4;
+                            Debug.Log("BACK VERTICES MADE");
                         }
 
                     }
@@ -148,12 +149,26 @@ public class VoxelModel : MonoBehaviour
                         voxel[h, w, d].face[2] = voxel[h, w - 1, d] != null ? false : true;
                         if (voxel[h, w, d].face[2])
                         {
-
+                            vertices.Add(pos + new Vector3(adjust, adjust,-adjust)); //RUB
+                            vertices.Add(pos + new Vector3(adjust,-adjust,-adjust)); //RDB
+                            vertices.Add(pos + new Vector3(adjust,-adjust, adjust)); //RDF
+                            vertices.Add(pos + new Vector3(adjust, adjust, adjust)); //RUF
+                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
+                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
+                            vertexCount += 4;
+                            Debug.Log("RIGHT VERTICES MADE");
                         }
                         voxel[h, w, d].face[3] = voxel[h, w + 1, d] != null ? false : true;
                         if (voxel[h, w, d].face[3])
                         {
-
+                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust)); //LUB
+                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust)); //LDB
+                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //LDF
+                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUF
+                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
+                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
+                            vertexCount += 4;
+                            Debug.Log("LEFT VERTICES MADE");
                         }
                     }
                     
@@ -163,12 +178,26 @@ public class VoxelModel : MonoBehaviour
                         voxel[h, w, d].face[4] = voxel[h - 1, w, d] != null ? false : true;
                         if (voxel[h, w, d].face[4])
                         {
-
+                            vertices.Add(pos + new Vector3(adjust, adjust, -adjust)); //RUB
+                            vertices.Add(pos + new Vector3(adjust, adjust, adjust));  //RUF
+                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust));  //LUF
+                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUB
+                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
+                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
+                            vertexCount += 4;
+                            Debug.Log("TOP VERTICES MADE");
                         }
                         voxel[h, w, d].face[5] = voxel[h + 1, w, d] != null ? false : true;
                         if (voxel[h, w, d].face[5])
                         {
-
+                            vertices.Add(pos + new Vector3(adjust, -adjust, -adjust)); //LDB
+                            vertices.Add(pos + new Vector3(adjust, -adjust, adjust));  //LDF
+                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust));  //RDF
+                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //RDB
+                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
+                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
+                            vertexCount += 4;
+                            Debug.Log("BOTTOM VERTICES MADE");
                         }
                     }
                 }
