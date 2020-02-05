@@ -23,6 +23,13 @@ public class VoxelModel : MonoBehaviour
         }
     }
 
+    public struct MeshRange
+    {
+        public Vector3 begin;
+        public Vector3 end;
+    }
+
+
 
     public int size;
     public Cube[,,] voxel = null;
@@ -33,6 +40,7 @@ public class VoxelModel : MonoBehaviour
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
     Mesh mesh;
+
 
     void Start()
     {
@@ -80,6 +88,7 @@ public class VoxelModel : MonoBehaviour
         mesh.Clear();
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
+        Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
 
     }
 
@@ -89,7 +98,55 @@ public class VoxelModel : MonoBehaviour
         Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
         return startPos + (new Vector3(-w, -h, -d)) * this.scale;
     }
-    
+    void merge(List<MeshRange> face)
+    {
+        bool change;
+        if (face.Count < 2)
+            return;
+        //1 = begin 2 = end
+        Vector3 a1, b1, a2, b2;
+        do
+        {
+            change = false;
+            for (int i = 0; i < face.Count - 1; i++)
+            {
+                for (int j = i+1; j < face.Count; j++)
+                {
+                    a1 = face[i].begin; a2 = face[i].end;
+                    b1 = face[j].begin; b2 = face[j].end;
+                    if ((a1.x == b1.x && a1.y == b1.y && a2.x == b2.x && a2.y == b2.y && (Math.Abs(a2.z - b1.z) == 1 || Math.Abs(a1.z - b2.z) == 1)) ||
+                        (a1.x == b1.x && a1.z == b1.z && a2.x == b2.x && a2.z == b2.z && (Math.Abs(a2.y - b1.y) == 1 || Math.Abs(a1.y - b2.y) == 1)) ||
+                        (a1.z == b1.z && a1.y == b1.y && a2.z == b2.z && a2.y == b2.y && (Math.Abs(a2.x - b1.x) == 1 || Math.Abs(a1.x - b2.x) == 1)))
+                    {
+                        Vector3 begin = face[i].begin;
+                        Vector3 end = face[j].end;
+                        MeshRange range = new MeshRange();
+                        range.begin = begin;
+                        range.end = end;
+                        face.Remove(face[j]);
+                        face.Remove(face[i]);
+                        //Debug.Log(i);
+                        face.Add(range);
+                        change = true;
+                    }
+
+                }
+            }
+
+        } while (change);
+
+
+    }
+
+    public void addFace(List<MeshRange> face, Vector3 pos)
+    {
+        MeshRange f = new MeshRange();
+        f.begin = pos;
+        f.end = pos;
+        face.Add(f);
+        merge(face);
+    }
+
     //Check Face visibility
     //
     public void checkFaces()
@@ -100,6 +157,15 @@ public class VoxelModel : MonoBehaviour
         int vertexCount = 0;
         //Vector3 cubePos = startPos  + (new Vector3(-w, -h, -d)) * this.scale;
         //loop through and turn on faces that are visible
+
+        List<MeshRange> front = new List<MeshRange>();
+        List<MeshRange> back = new List<MeshRange>();
+        List<MeshRange> left = new List<MeshRange>();
+        List<MeshRange> right = new List<MeshRange>();
+        List<MeshRange> top = new List<MeshRange>();
+        List<MeshRange> bottom = new List<MeshRange>();
+
+
         for (int d = 0; d < voxelArraySize; d++)
         {
             for (int h = 0; h < voxelArraySize; h++)
@@ -110,66 +176,53 @@ public class VoxelModel : MonoBehaviour
                         continue;
 
                     Vector3 pos = getPos(w, h, d);
+                    //Debug.Log("POSE" + pos.ToString());
+
+                    Vector3 arrayPos = new Vector3(w, h, d);
+
                     //FBLRTB
                     //front / back
-                    if(d - 1 > 0 && d + 1 < voxelArraySize)
+                    if(d - 1 >= 0 && d + 1 < voxelArraySize)
                     {
-
+                        //Add front faces
                         voxel[h, w, d].face[0] = voxel[h, w, d - 1] != null ? false : true;
-                        if (voxel[h,w,d].face[0])
-                        {
-
-                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust)); //LUF 0
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust)); //LDF 1
-                            vertices.Add(pos + new Vector3(adjust, -adjust, adjust)); //RDF 2 
-                            vertices.Add(pos + new Vector3(adjust, adjust, adjust)); //RUF 3
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
-                            vertexCount += 4;
-                            Debug.Log("FRONT VERTICES MADE");
-                        }
+                        if (voxel[h, w, d].face[0])
+                            addFace(front, arrayPos); 
+                   
+                        //Add back faces
                         voxel[h, w, d].face[1] = voxel[h, w, d + 1] != null ? false : true;
                         if (voxel[h, w, d].face[1])
-                        {
-                            vertices.Add(pos + new Vector3(adjust, adjust, -adjust)); //RUB
-                            vertices.Add(pos + new Vector3(adjust, -adjust, -adjust)); //RDB
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //LDB
-                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUB
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
-                            vertexCount += 4;
-                            Debug.Log("BACK VERTICES MADE");
-                        }
+                            addFace(back, arrayPos);
 
+                    }
+                    else
+                    {
+                        //Add front faces if they're below the bounds of our array
+                        if(d - 1 < 0)
+                            addFace(front, arrayPos);
+                        //Add front faces if they're above the bounds of our array
+                        else if(d + 1 >= voxelArraySize)
+                            addFace(back, arrayPos);
                     }
             
                     //left / right
-                    if (w - 1 > 0 && w + 1 < voxelArraySize)
+                    if (w - 1 >= 0 && w + 1 < voxelArraySize)
                     {
                         voxel[h, w, d].face[2] = voxel[h, w - 1, d] != null ? false : true;
                         if (voxel[h, w, d].face[2])
-                        {
-                            vertices.Add(pos + new Vector3(adjust, adjust,-adjust)); //RUB
-                            vertices.Add(pos + new Vector3(adjust,-adjust,-adjust)); //RDB
-                            vertices.Add(pos + new Vector3(adjust,-adjust, adjust)); //RDF
-                            vertices.Add(pos + new Vector3(adjust, adjust, adjust)); //RUF
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
-                            vertexCount += 4;
-                            Debug.Log("RIGHT VERTICES MADE");
-                        }
+                            addFace(left, arrayPos);
+
+
                         voxel[h, w, d].face[3] = voxel[h, w + 1, d] != null ? false : true;
                         if (voxel[h, w, d].face[3])
-                        {
-                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust)); //LUB
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust)); //LDB
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //LDF
-                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUF
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
-                            vertexCount += 4;
-                            Debug.Log("LEFT VERTICES MADE");
-                        }
+                            addFace(right, arrayPos);
+                    }
+                    else
+                    {
+                        if (w - 1 < 0)
+                            addFace(left, arrayPos);
+                        else if (w + 1 == voxelArraySize)
+                            addFace(right, arrayPos);
                     }
                     
                     //top / bottom
@@ -177,52 +230,120 @@ public class VoxelModel : MonoBehaviour
                     {
                         voxel[h, w, d].face[4] = voxel[h - 1, w, d] != null ? false : true;
                         if (voxel[h, w, d].face[4])
-                        {
-                            vertices.Add(pos + new Vector3(adjust, adjust, -adjust)); //RUB
-                            vertices.Add(pos + new Vector3(adjust, adjust, adjust));  //RUF
-                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust));  //LUF
-                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUB
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
-                            vertexCount += 4;
-                            Debug.Log("TOP VERTICES MADE");
-                        }
+                            addFace(top, arrayPos);
                         voxel[h, w, d].face[5] = voxel[h + 1, w, d] != null ? false : true;
                         if (voxel[h, w, d].face[5])
-                        {
-                            vertices.Add(pos + new Vector3(adjust, -adjust, -adjust)); //LDB
-                            vertices.Add(pos + new Vector3(adjust, -adjust, adjust));  //LDF
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust));  //RDF
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //RDB
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
-                            vertexCount += 4;
-                            Debug.Log("BOTTOM VERTICES MADE");
-                        }
+                            addFace(bottom, arrayPos);
                     } else {
-                        if(h - 1 < 0) {
-                            vertices.Add(pos + new Vector3(adjust, adjust, -adjust)); //RUB
-                            vertices.Add(pos + new Vector3(adjust, adjust, adjust));  //RUF
-                            vertices.Add(pos + new Vector3(-adjust, adjust, adjust));  //LUF
-                            vertices.Add(pos + new Vector3(-adjust, adjust, -adjust)); //LUB
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
-                            vertexCount += 4;
-                            Debug.Log("TOP VERTICES MADE");
-                        }
-                        if (h + 1 == voxelArraySize) {
-                            vertices.Add(pos + new Vector3(adjust, -adjust, -adjust)); //LDB
-                            vertices.Add(pos + new Vector3(adjust, -adjust, adjust));  //LDF
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, adjust));  //RDF
-                            vertices.Add(pos + new Vector3(-adjust, -adjust, -adjust)); //RDB
-                            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
-                            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
-                            vertexCount += 4;
-                            Debug.Log("BOTTOM VERTICES MADE");
-                        }
+                        if (h - 1 < 0)
+                            addFace(top, arrayPos);
+                        if (h + 1 == voxelArraySize)
+                            addFace(bottom, arrayPos);
                     }
                 }
             }
+        }
+        foreach(MeshRange m in front)
+        {
+            //Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+            Vector3 topleft     = getPos((int)m.begin.x, (int)m.begin.y, (int)m.begin.z);
+            Vector3 bottomleft  = getPos((int)m.begin.x, (int)m.end.y,   (int)m.begin.z);
+            Vector3 bottomright = getPos((int)m.end.x,   (int)m.end.y,   (int)m.begin.z);
+            Vector3 topright    = getPos((int)m.end.x,   (int)m.begin.y, (int)m.begin.z);
+            //Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+            vertices.Add(topleft     + new Vector3( adjust, adjust,  adjust)); //LUF 0
+            vertices.Add(bottomleft  + new Vector3( adjust, -adjust, adjust)); //LDF 1
+            vertices.Add(bottomright + new Vector3(-adjust, -adjust, adjust)); //RDF 2 
+            vertices.Add(topright    + new Vector3(-adjust, adjust,  adjust)); //RUF 3
+            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1);
+            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3);
+            vertexCount += 4;
+            //Debug.Log("attempt");
+        }
+        foreach (MeshRange m in back)
+        {
+            Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+            Vector3 topleft     = getPos((int)m.begin.x, (int)m.begin.y, (int)m.begin.z);
+            Vector3 bottomleft  = getPos((int)m.begin.x, (int)m.end.y,   (int)m.begin.z);
+            Vector3 bottomright = getPos((int)m.end.x,   (int)m.end.y,   (int)m.begin.z);
+            Vector3 topright    = getPos((int)m.end.x,   (int)m.begin.y, (int)m.begin.z);
+            Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+            vertices.Add(topleft     + new Vector3( adjust,  adjust, -adjust)); //RUB
+            vertices.Add(bottomleft  + new Vector3( adjust, -adjust, -adjust)); //RDB
+            vertices.Add(bottomright + new Vector3(-adjust, -adjust, -adjust)); //LDB
+            vertices.Add(topright    + new Vector3(-adjust, adjust,  -adjust)); //LUB
+            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
+            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
+            vertexCount += 4;
+            //Debug.Log("attempt");
+        }
+        foreach (MeshRange m in left)
+        {
+            //Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+            Vector3 topleft     = getPos((int)m.begin.x, (int)m.begin.y, (int)m.end.z);
+            Vector3 bottomleft  = getPos((int)m.begin.x, (int)m.end.y,   (int)m.end.z);
+            Vector3 bottomright = getPos((int)m.begin.x, (int)m.end.y,   (int)m.begin.z);
+            Vector3 topright    = getPos((int)m.begin.x, (int)m.begin.y, (int)m.begin.z);
+            //Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+            vertices.Add(topleft     + new Vector3(adjust,  adjust, -adjust)); //RUB
+            vertices.Add(bottomleft  + new Vector3(adjust, -adjust, -adjust)); //RDB
+            vertices.Add(bottomright + new Vector3(adjust, -adjust,  adjust)); //RDF
+            vertices.Add(topright    + new Vector3(adjust,  adjust,  adjust)); //RUF
+            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
+            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
+            vertexCount += 4;
+            //Debug.Log("RIGHT VERTICES MADE");
+        }
+        foreach (MeshRange m in right)
+        {
+            //Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+            Vector3 topleft     = getPos((int)m.begin.x, (int)m.begin.y, (int)m.begin.z);
+            Vector3 bottomleft  = getPos((int)m.begin.x, (int)m.end.y,   (int)m.begin.z);
+            Vector3 bottomright = getPos((int)m.begin.x, (int)m.end.y,   (int)m.end.z);
+            Vector3 topright    = getPos((int)m.begin.x, (int)m.begin.y, (int)m.end.z);
+            //Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+            vertices.Add(topleft     + new Vector3(-adjust,  adjust,  adjust)); //LUB
+            vertices.Add(bottomleft  + new Vector3(-adjust, -adjust,  adjust)); //LDB
+            vertices.Add(bottomright + new Vector3(-adjust, -adjust, -adjust)); //LDF
+            vertices.Add(topright    + new Vector3(-adjust,  adjust, -adjust)); //LUF
+            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 0);
+            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 2);
+            vertexCount += 4;
+            //Debug.Log("RIGHT VERTICES MADE");
+        }
+        foreach (MeshRange m in top)
+        {
+            //Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+            Vector3 topleft     = getPos((int)m.end.x,      (int)m.begin.y, (int)m.end.z);
+            Vector3 bottomleft  = getPos((int)m.end.x,      (int)m.begin.y, (int)m.begin.z);
+            Vector3 bottomright = getPos((int)m.begin.x,    (int)m.begin.y, (int)m.begin.z);
+            Vector3 topright    = getPos((int)m.begin.x,    (int)m.begin.y, (int)m.end.z);
+            //Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+            vertices.Add(topleft     + new Vector3(-adjust, adjust, -adjust)); //RUB
+            vertices.Add(bottomleft  + new Vector3(-adjust, adjust,  adjust));  //RUF
+            vertices.Add(bottomright + new Vector3( adjust, adjust,  adjust));  //LUF
+            vertices.Add(topright    + new Vector3( adjust, adjust, -adjust)); //LUB
+            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
+            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
+            vertexCount += 4;
+            //Debug.Log("RIGHT VERTICES MADE");
+        }
+        foreach (MeshRange m in bottom)
+        {
+            //Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+            Vector3 topleft     = getPos((int)m.begin.x, (int)m.end.y, (int)m.end.z);
+            Vector3 bottomleft  = getPos((int)m.begin.x, (int)m.end.y,   (int)m.begin.z);
+            Vector3 bottomright = getPos((int)m.end.x, (int)m.end.y,   (int)m.begin.z);
+            Vector3 topright    = getPos((int)m.end.x, (int)m.end.y, (int)m.end.z);
+            //Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+            vertices.Add(topleft     + new Vector3( adjust, -adjust, -adjust)); //LDB
+            vertices.Add(bottomleft  + new Vector3( adjust, -adjust,  adjust)); //LDF
+            vertices.Add(bottomright + new Vector3(-adjust, -adjust,  adjust)); //RDF
+            vertices.Add(topright     + new Vector3(-adjust, -adjust, -adjust)); //RDB
+            triangles.Add(vertexCount + 0); triangles.Add(vertexCount + 1); triangles.Add(vertexCount + 2);
+            triangles.Add(vertexCount + 2); triangles.Add(vertexCount + 3); triangles.Add(vertexCount + 0);
+            vertexCount += 4;
+            //Debug.Log("RIGHT VERTICES MADE");
         }
     }
 
