@@ -3,53 +3,84 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
-namespace Server
+namespace SmashDomeNetwork
 {
-    public class Message
+    public abstract class Message
     {
-        protected static int id = 0;
-        protected List<byte> message;
-        protected byte[] textmessage;
+        protected DateTime time = DateTime.Now;
+        protected byte from;
+        protected byte to;
+        protected byte msgType;
+        //protected byte[] msg; // used later when we move from json
+        char delimiter = '\0';
 
-        public Message()
+        public byte[] constructMsg()
         {
-            message = new List<byte>();
-
-            //store the id in the list
-            message.Add((byte)(id >> 24));
-            message.Add((byte)(id >> 16));
-            message.Add((byte)(id >> 8));
-            message.Add((byte)(id >> 0));
-            id++;
-
+            return null;
         }
 
         public byte[] GetMessage()
         {
+            string json = JsonUtility.ToJson(this);
+            Debug.Log(json);
 
-            foreach (byte b in textmessage)
-            {
-                this.message.Add(b);
-            }
-            addDelimiter();
-            return message.ToArray();
+            return System.Text.ASCIIEncoding.ASCII.GetBytes(json);
         }
+    }
 
-        public void SetMessage(string msg)
+    public class LoginMsg : Message
+    {
+        //constructor
+        public LoginMsg(byte to)
         {
-            textmessage = System.Text.Encoding.ASCII.GetBytes(msg);
+            this.msgType = 1;
+            this.to = to;
         }
 
-        protected void addDelimiter()
+    }
+    public class LogoutMsg : Message
+    {
+        public LogoutMsg()
         {
-            this.message.Add(0);
-            this.message.Add(0);
-            this.message.Add(0);
-            this.message.Add(0);
-            this.message.Add(0);
-            this.message.Add(0);
+            this.msgType = 2;
+
         }
+
+    }
+    public class MoveMsg : Message
+    {
+        public MoveMsg()
+        {
+            this.msgType = 3;
+        }
+
+    }
+    public class ShootMsg : Message
+    {
+        public ShootMsg()
+        {
+            this.msgType = 4;
+        }
+
+ 
+    }
+    public class SnapshotMsg : Message
+    {
+        public SnapshotMsg()
+        {
+            this.msgType = 5;
+        }
+
+    }
+    public class StructureChange : Message
+    {
+        public StructureChange()
+        {
+            this.msgType = 6;
+        }
+        
     }
 
 }
