@@ -10,9 +10,9 @@ namespace SmashDomeNetwork
     public abstract class Message
     {
         protected DateTime time = DateTime.Now;
-        protected byte from;
-        protected byte to;
-        protected byte msgType;
+        public byte from;
+        public byte to;
+        public byte msgType;
         //protected byte[] msg; // used later when we move from json
         char delimiter = '\0';
 

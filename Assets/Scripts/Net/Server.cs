@@ -23,8 +23,8 @@ namespace SmashDomeNetwork
         int connectionCount;    // counts how many are currently connected
         public TcpListener listen;
 
-        Queue<ClientData> newUserData = new Queue<ClientData>();
-        Queue<String> msgQueue = new Queue<String>();
+        public Queue<ClientData> newUserData = new Queue<ClientData>();
+        public Queue<String> msgQueue = new Queue<String>();
         
         public Server(int port)
         {
@@ -82,7 +82,7 @@ namespace SmashDomeNetwork
             
         }
         
-        public void ReceiveMsg(ClientData client)
+        protected void ReceiveMsg(ClientData client)
         {
             
             Byte[] buffer;
@@ -91,22 +91,29 @@ namespace SmashDomeNetwork
 
             while (true)
             {
-
-                while (true)
+                try
                 {
-                    buffer = new Byte[256];
                     message = String.Empty;
-
-
-                    int bytesReceived = stream.ReadByte();
-                    message += (char) bytesReceived;
-                    if (message.IndexOf("}") > -1)
+                    while (true)
                     {
-                        break;
+                        buffer = new Byte[256];
+
+
+                        int bytesReceived = stream.ReadByte();
+                        message += (char)bytesReceived;
+                        if (message.IndexOf("}") > -1)
+                        {
+                            break;
+                        }
                     }
+                    msgQueue.Enqueue(message);
+                    Debug.Log(message);
                 }
-                //msgQueue.Enqueue(message);
-                Debug.Log(message);
+                catch (SocketException e)
+                {
+                    Debug.Log(e);
+                }
+                
             }
 
         }
@@ -137,6 +144,10 @@ namespace SmashDomeNetwork
             {
                 Debug.Log(e.ToString());
             }
+        }
+        public bool MsgInQueue()
+        {
+            return msgQueue.Count > 0;
         }
 
         private void OnApplicationQuit()

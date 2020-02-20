@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using SmashDomeNetwork;
 
-public class Octree : MonoBehaviour
+
+public class Octree : NetworkedItem
 {
 
 

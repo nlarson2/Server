@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace SmashDomeNetwork
 {
-    public class Player : MonoBehaviour
+    public class Player : NetworkedItem
     {
-
+        public ClientData clientData;
         // Start is called before the first frame update
         void Start()
         {
@@ -18,5 +18,7 @@ namespace SmashDomeNetwork
         {
 
         }
+        
+        //potentiall on collision reduce health or something
     }
 }

@@ -5,15 +5,8 @@ using UnityEngine;
 namespace SmashDomeNetwork {
     public class NetworkedItem : MonoBehaviour
     {
-       // NetworkManager netManager = NetworkManager.Instance;
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
+        NetworkManager netManager = NetworkManager.Instance;
+        protected void Send(Message msg)
         {
 
         }
