@@ -17,7 +17,6 @@ namespace SmashDomeNetwork
 {
     class Server
     {
-        static int count = 0; //test stuff
         int port;
         int idCount;            // which id to give
         int connectionCount;    // counts how many are currently connected
@@ -33,7 +32,6 @@ namespace SmashDomeNetwork
             listen = new TcpListener(IPAddress.Any, port);
             Debug.Log("Listening on Port 50000");
             idCount = 0; connectionCount = 0;
-            count++;
             //start thread to listen
             Thread thread = new Thread(ListenForConnections);
             thread.Start();
@@ -42,7 +40,6 @@ namespace SmashDomeNetwork
         //Listen for new connection so that they can be stored in the clients table
         public void ListenForConnections()
         {
-            Debug.Log(count);
             listen.Start();
 
             TcpClient client;
@@ -145,6 +142,7 @@ namespace SmashDomeNetwork
                 Debug.Log(e.ToString());
             }
         }
+
         public bool MsgInQueue()
         {
             return msgQueue.Count > 0;

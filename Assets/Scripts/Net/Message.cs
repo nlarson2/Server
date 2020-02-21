@@ -7,8 +7,18 @@ using UnityEngine;
 
 namespace SmashDomeNetwork
 {
+    public enum MsgType
+    {
+        LOGIN = 1,
+        LOGOUT = 2,
+        MOVE = 3,
+        SHOOT = 4,
+        SNAPSHOT = 5,
+        STRUCTURE = 6
+    }
     public abstract class Message
     {
+
         protected DateTime time = DateTime.Now;
         public byte from;
         public byte to;

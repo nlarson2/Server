@@ -6,7 +6,6 @@ namespace SmashDomeNetwork
 {
     public class Player : NetworkedItem
     {
-        public ClientData clientData;
         // Start is called before the first frame update
         void Start()
         {
