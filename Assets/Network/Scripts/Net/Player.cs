@@ -1,0 +1,58 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SmashDomeNetwork;
+
+
+public class Player : MonoBehaviour
+{
+
+    NetworkManager networkManager = NetworkManager.Instance;
+
+    public float speed = 100.0f;
+
+    public Vector3 position;
+    public Vector3 lHandPos;
+    public Vector3 rHandPos;
+    public Quaternion rotate;
+    public Quaternion lHandRot;
+    public Quaternion rHandRot;
+
+    public GameObject lHand;
+    public GameObject rHand;
+
+
+
+    // Update is called once per frame
+    void Update()
+    {
+        /*body*/
+        if (position != transform.position)
+        {
+            if (Vector3.Distance(position, transform.position) > 10.0f)
+                transform.position = position;
+            else
+                transform.position = Vector3.MoveTowards(transform.position, position, Time.deltaTime * speed);
+        }
+        if (rotate != transform.rotation)
+        {
+            //transform.eulerAngles = rotate.eulerAngles;
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotate, 0.5f);
+        }
+
+        if (lHand != null)
+        {
+            /*Left hand*/
+            if (lHandPos != lHand.transform.localPosition)
+                lHand.transform.localPosition = lHandPos;
+            if (lHandRot != lHand.transform.rotation)
+                lHand.transform.eulerAngles = lHandRot.eulerAngles;
+
+            /*Right hand*/
+            if (rHandPos != rHand.transform.localPosition)
+                rHand.transform.localPosition = rHandPos;
+            if (rHandRot != rHand.transform.rotation)
+                rHand.transform.eulerAngles = rHandRot.eulerAngles;
+        }
+    }
+}

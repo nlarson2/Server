@@ -12,17 +12,19 @@ namespace SmashDomeNetwork
         LOGIN = 1,
         LOGOUT = 2,
         MOVE = 3,
-        SHOOT = 4,
-        SNAPSHOT = 5,
-        STRUCTURE = 6
+        MOVEVR = 4,
+        SHOOT = 5,
+        SNAPSHOT = 6,
+        STRUCTURE = 7,
+        ADDPLAYER = 8
     }
     public abstract class Message
     {
 
         protected DateTime time = DateTime.Now;
-        public byte from;
-        public byte to;
-        public byte msgType;
+        public int from;
+        public int to;
+        public int msgType;
         //protected byte[] msg; // used later when we move from json
         char delimiter = '\0';
 
@@ -43,44 +45,61 @@ namespace SmashDomeNetwork
     public class LoginMsg : Message
     {
         //constructor
-        public LoginMsg(byte to)
+        public LoginMsg(int from)
         {
             this.msgType = 1;
-            this.to = to;
+            this.from = from;
         }
 
     }
     public class LogoutMsg : Message
     {
-        public LogoutMsg()
+        public LogoutMsg(int from)
         {
             this.msgType = 2;
+            this.from = from;
 
         }
 
     }
     public class MoveMsg : Message
     {
-        public MoveMsg()
+        public float x, y, z;
+        public float xr, yr, zr;
+
+        public MoveMsg(int from)
         {
             this.msgType = 3;
+            this.from = from;
         }
 
     }
-    public class ShootMsg : Message
+
+    public class MoveVRMsg : Message
     {
-        public ShootMsg()
+        public MoveVRMsg(int from)
         {
             this.msgType = 4;
+            this.from = from;
         }
 
- 
+    }
+
+    public class ShootMsg : Message
+    {
+        public ShootMsg(int from)
+        {
+            this.msgType = 5;
+            this.from = from;
+        }
+
+
     }
     public class SnapshotMsg : Message
     {
         public SnapshotMsg()
         {
-            this.msgType = 5;
+            this.msgType = 6;
         }
 
     }
@@ -88,9 +107,19 @@ namespace SmashDomeNetwork
     {
         public StructureChange()
         {
-            this.msgType = 6;
+            this.msgType = 7;
         }
-        
+
+    }
+
+    public class AddPlayer : Message
+    {
+        public int playerType;
+        public AddPlayer(int playerType)
+        {
+            this.msgType = 8;
+            this.playerType = playerType;
+        }
     }
 
 }

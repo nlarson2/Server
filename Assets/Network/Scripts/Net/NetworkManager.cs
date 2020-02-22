@@ -20,8 +20,8 @@ namespace SmashDomeNetwork
 
         
         Server server;// = new Server(50000);
-        protected Dictionary<int, PlayerData> users;            //hashtable of users
-        protected Dictionary<int, ClientData> connectingUsers;  //hashtable of users that havent finished connecting
+        protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
+        protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
 
         public GameObject playerPrefab;   //Networked player model
         public Transform parent;          //Location in hierarchy
