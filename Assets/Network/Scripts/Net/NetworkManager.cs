@@ -17,14 +17,14 @@ using Unity.Jobs;
 namespace SmashDomeNetwork
 
 {
-    class NetworkManager : MonoBehaviour
+    public class NetworkManager : MonoBehaviour
     {
 
         
         Server server;// = new Server(50000);
         protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
-       // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
-
+                                                                                                     // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
+        public List<StructureChangeMsg> structures = new List<StructureChangeMsg>();
 
         public GameObject playerPrefab;   //Networked player model
         public Transform parent;          //Location in hierarchy
@@ -98,6 +98,11 @@ namespace SmashDomeNetwork
                     addPlayerMsg.from = playerData.Value.clientData.id;
                     addPlayerMsg.to = player.clientData.id;
                     Send(addPlayerMsg);
+                }
+                foreach (StructureChangeMsg structMsg in structures)
+                {
+                    structMsg.to = player.clientData.id;
+                    Send(structMsg);
                 }
             }
 
@@ -178,6 +183,7 @@ namespace SmashDomeNetwork
                     {
                         case MsgType.LOGIN:
                             Login(newMsg);
+                            
                             break;
                         case MsgType.LOGOUT:
                             Logout(newMsg);
@@ -216,6 +222,7 @@ namespace SmashDomeNetwork
             ClientData clientData = server.connecting[loginMsg.from];
             server.connecting.Remove(loginMsg.from);
             instantiatePlayerQ.Enqueue(clientData);
+            
 
         }
         private void Logout(string msg)

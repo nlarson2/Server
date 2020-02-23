@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SmashDomeNetwork {
     public class NetworkedItem : MonoBehaviour
     {
-        NetworkManager netManager = NetworkManager.Instance;
+        protected NetworkManager netManager = NetworkManager.Instance;
      
     }
 }

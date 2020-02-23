@@ -506,7 +506,7 @@ PrefabInstance:
     - target: {fileID: 4867869773593784219, guid: e1688a8cb01af4642a940d3df6c83508,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6452356265715133360, guid: e1688a8cb01af4642a940d3df6c83508,
         type: 3}
@@ -671,7 +671,7 @@ MonoBehaviour:
   size: 0
   cube: {fileID: 8548484160691486230, guid: 7c1e46a0973e4f341a25335221bb6e77, type: 3}
   scale: 0
-  inputfile: Assets/Text 1.txt
+  inputfile: Assets/Text.txt
 --- !u!33 &6836684907016150577
 MeshFilter:
   m_ObjectHideFlags: 0

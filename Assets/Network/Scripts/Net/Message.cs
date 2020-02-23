@@ -110,6 +110,9 @@ namespace SmashDomeNetwork
     }
     public class StructureChangeMsg : Message
     {
+        public Vector3 pos;
+        public Vector3[] vertices;// = new List<Vector3>();
+        public int[] triangles;// = new List<Vector3>();
         public StructureChangeMsg()
         {
             this.msgType = 7;
