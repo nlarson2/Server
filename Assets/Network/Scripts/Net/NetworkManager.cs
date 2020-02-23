@@ -25,6 +25,7 @@ namespace SmashDomeNetwork
         protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
         protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
 
+
         public GameObject playerPrefab;   //Networked player model
         public Transform parent;          //Location in hierarchy
         public Transform spawnpoint;       //Spawn point in world
@@ -74,8 +75,9 @@ namespace SmashDomeNetwork
             //watch all queues for updates
             while (server.newUserData.Count > 0)
             {
-                ClientData cli = server.newUserData.Dequeue();
-                connectingUsers.Add(cli.id, cli);
+                PlayerData cli = new PlayerData(server.newUserData.Dequeue());
+                Debug.Log(String.Format("ID: {0}", cli.clientData.id));
+                users.Add(cli.clientData.id, cli);
             }
 
             while (instantiatePlayerQ.Count > 0)
@@ -90,7 +92,7 @@ namespace SmashDomeNetwork
                 int player = removePlayerQ.Dequeue();
                 try
                 {
-                    PlayerData playerData = users.ElementAt(player).Value;
+                    PlayerData playerData = users[player];
                     Destroy(playerData.obj);
                     playerData.clientData.socket.Close();
                     users.Remove(player);
@@ -187,8 +189,7 @@ namespace SmashDomeNetwork
         private void Login(string msg)
         {
             LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
-            ClientData clientData = connectingUsers.ElementAt(loginMsg.from).Value;
-            PlayerData playerData = new PlayerData(clientData);
+            PlayerData playerData = users[loginMsg.from];
             instantiatePlayerQ.Enqueue(playerData);
 
         }
@@ -200,7 +201,7 @@ namespace SmashDomeNetwork
         private void Move(string msg)
         {
             MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
-            Player playerController = users.ElementAt(moveMsg.from).Value.playerControl;
+            Player playerController = users[moveMsg.from].playerControl;
             playerController.position = new Vector3(moveMsg.x, moveMsg.y, moveMsg.z);
             playerController.rotation = new Quaternion(moveMsg.xr, moveMsg.yr, moveMsg.zr, moveMsg.wr);
         }

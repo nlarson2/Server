@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
 
     public GameObject lHand;
     public GameObject rHand;
+    public GameObject body;
 
 
    

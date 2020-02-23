@@ -65,7 +65,7 @@ namespace SmashDomeNetwork
                     connectionCount++;
 
                     //This is where the login notification will go*******************************
-                    Message msg = new LoginMsg((byte)clientData.id);
+                    LoginMsg msg = new LoginMsg((byte)clientData.id);
                     byte[] message = msg.GetMessage();
                     stream.Write(message, 0, message.Length);
 

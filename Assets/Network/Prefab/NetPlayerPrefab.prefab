@@ -324,6 +324,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cef36395c064a14e8201520ad7752ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 100
+  position: {x: 0, y: 0, z: 0}
+  lHandPos: {x: 0, y: 0, z: 0}
+  rHandPos: {x: 0, y: 0, z: 0}
+  rotation: {x: 0, y: 0, z: 0, w: 0}
+  lHandRot: {x: 0, y: 0, z: 0, w: 0}
+  rHandRot: {x: 0, y: 0, z: 0, w: 0}
+  lHand: {fileID: 31094806952485329}
+  rHand: {fileID: 1730722900742091697}
 --- !u!1 &7485720032206910212
 GameObject:
   m_ObjectHideFlags: 0
