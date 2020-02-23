@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
 
     NetworkManager networkManager = NetworkManager.Instance;
 
-    public float speed = 100.0f;
+    public float speed = 10.0f;
 
     public Vector3 position;
     public Vector3 lHandPos;
@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
     public Quaternion rotation;
     public Quaternion lHandRot;
     public Quaternion rHandRot;
+    public Quaternion cameratRotation;
 
     public GameObject lHand;
     public GameObject rHand;
@@ -26,7 +27,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        /*body*/
+        
         if (position != transform.position)
         {
             if (Vector3.Distance(position, transform.position) > 10.0f)
@@ -36,8 +37,13 @@ public class Player : MonoBehaviour
         }
         if (rotation != transform.rotation)
         {
-            //transform.eulerAngles = rotate.eulerAngles;
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.5f);
+            transform.eulerAngles = rotation.eulerAngles;
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.1f);   
+        }
+        if (cameratRotation != body.transform.rotation)
+        {
+            body.transform.eulerAngles = cameratRotation.eulerAngles;
+            body.transform.rotation = Quaternion.Slerp(body.transform.rotation, cameratRotation, 0.1f);
         }
 
         if (lHand != null)

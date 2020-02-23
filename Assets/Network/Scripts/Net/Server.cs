@@ -22,8 +22,9 @@ namespace SmashDomeNetwork
         int connectionCount;    // counts how many are currently connected
         public TcpListener listen;
 
-        public Queue<ClientData> newUserData = new Queue<ClientData>();
+        //public Queue<ClientData> newUserData = new Queue<ClientData>();
         public Queue<String> msgQueue = new Queue<String>();
+        public Dictionary<int, ClientData> connecting = new Dictionary<int, ClientData>();
 
         private List<Thread> threads = new List<Thread>();
         
@@ -34,6 +35,7 @@ namespace SmashDomeNetwork
             listen = new TcpListener(IPAddress.Any, port);
             Debug.Log("Listening on Port 50000");
             idCount = 1; connectionCount = 0;
+            
             //start thread to listen
             Thread thread = new Thread(ListenForConnections);
             thread.Start();
@@ -58,9 +60,11 @@ namespace SmashDomeNetwork
                     client = listen.AcceptTcpClient();
                     socket = client.Client;
                     stream = client.GetStream();
+
                     ipAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
                     clientData = new ClientData(idCount++, socket, stream, ipAddress);
-                    newUserData.Enqueue(clientData);
+                    
+                    connecting.Add(clientData.id, clientData);
                     Debug.Log("Client Added");
                     connectionCount++;
 

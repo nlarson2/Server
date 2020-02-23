@@ -23,14 +23,14 @@ namespace SmashDomeNetwork
         
         Server server;// = new Server(50000);
         protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
-        protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
+       // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
 
 
         public GameObject playerPrefab;   //Networked player model
         public Transform parent;          //Location in hierarchy
         public Transform spawnpoint;       //Spawn point in world
 
-        Queue<PlayerData> instantiatePlayerQ = new Queue<PlayerData>();
+        Queue<ClientData> instantiatePlayerQ = new Queue<ClientData>();
         Queue<int> removePlayerQ = new Queue<int>();
         Queue<Bullet> bulletQ = new Queue<Bullet>();
 
@@ -72,19 +72,16 @@ namespace SmashDomeNetwork
 
         private void Update()
         {
-            //watch all queues for updates
-            while (server.newUserData.Count > 0)
-            {
-                PlayerData cli = new PlayerData(server.newUserData.Dequeue());
-                Debug.Log(String.Format("ID: {0}", cli.clientData.id));
-                users.Add(cli.clientData.id, cli);
-            }
+           
 
             while (instantiatePlayerQ.Count > 0)
             {
-                PlayerData player = instantiatePlayerQ.Dequeue();
+                //instatiate net player object in the game and store object and client info in users dictionary
+                PlayerData player = new PlayerData(instantiatePlayerQ.Dequeue());
                 player.obj = Instantiate(playerPrefab, spawnpoint.position, spawnpoint.rotation, parent);
                 player.playerControl = player.obj.GetComponent<Player>();
+                users.Add(player.clientData.id, player);
+                player.obj.name = "NET_PLAYER_" + player.clientData.id;
             }
 
             while(removePlayerQ.Count > 0)
@@ -92,6 +89,7 @@ namespace SmashDomeNetwork
                 int player = removePlayerQ.Dequeue();
                 try
                 {
+                    //destory object and remove them from users
                     PlayerData playerData = users[player];
                     Destroy(playerData.obj);
                     playerData.clientData.socket.Close();
@@ -105,7 +103,7 @@ namespace SmashDomeNetwork
             
             while(bulletQ.Count > 0)
             {
-                //dont care right now
+                //waiting on bullets
             }
         }
         
@@ -139,13 +137,13 @@ namespace SmashDomeNetwork
                 newMsg = string.Empty;
                 while (server.msgQueue.Count > 0)
                 {
-                     newMsg = server.msgQueue.Dequeue();
+                    newMsg = server.msgQueue.Dequeue();
                     try
                     {
                         msg = JsonUtility.FromJson<Message>(newMsg);
                         Debug.Log("WORKED");
                     }
-                    catch (ArgumentException e)
+                    catch (ArgumentException e) //used to test what errors occur with Json messaging
                     {
                         Debug.Log(e);
                         Debug.Log(newMsg);
@@ -179,18 +177,19 @@ namespace SmashDomeNetwork
                             break;
 
                     }
-                    //process message and add to whatever queue
-                    //bullet or move
                 }
+                //wait for a message to be on the queue and then restart the loop
                 SpinWait.SpinUntil(() => server.msgQueue.Count > 0);
             }
         }
 
         private void Login(string msg)
         {
+            //pull new player off connectingUsers on the server and instantiate them into the game
             LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
-            PlayerData playerData = users[loginMsg.from];
-            instantiatePlayerQ.Enqueue(playerData);
+            ClientData clientData = server.connecting[loginMsg.from];
+            server.connecting.Remove(loginMsg.from);
+            instantiatePlayerQ.Enqueue(clientData);
 
         }
         private void Logout(string msg)
@@ -202,8 +201,9 @@ namespace SmashDomeNetwork
         {
             MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
             Player playerController = users[moveMsg.from].playerControl;
-            playerController.position = new Vector3(moveMsg.x, moveMsg.y, moveMsg.z);
-            playerController.rotation = new Quaternion(moveMsg.xr, moveMsg.yr, moveMsg.zr, moveMsg.wr);
+            playerController.position = moveMsg.pos;
+            playerController.rotation = moveMsg.playerRotation;
+            playerController.cameratRotation = moveMsg.camerRotation;
         }
         private void Shoot(string msg)
         {

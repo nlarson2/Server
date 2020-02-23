@@ -64,8 +64,9 @@ namespace SmashDomeNetwork
     }
     public class MoveMsg : Message
     {
-        public float x, y, z;
-        public float xr, yr, zr, wr;
+        public Vector3 pos;
+        public Quaternion playerRotation;
+        public Quaternion camerRotation;
 
         public MoveMsg(int from)
         {
