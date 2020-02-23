@@ -68,6 +68,8 @@ namespace SmashDomeNetwork
             Instance = this;
             msgThread = new Thread(ReceiveMessages);
             msgThread.Start();
+            /*snapShot = new Thread(SendSnapshot);
+            snapShot.Start();*/
         }
 
         private void Update()
@@ -82,6 +84,21 @@ namespace SmashDomeNetwork
                 player.playerControl = player.obj.GetComponent<Player>();
                 users.Add(player.clientData.id, player);
                 player.obj.name = "NET_PLAYER_" + player.clientData.id;
+                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id);
+                KeyValuePair<int, PlayerData>[] players = users.ToArray();
+                Debug.Log(players.Length);
+                foreach (KeyValuePair<int,PlayerData> playerData in players)
+                {
+                    if (playerData.Value.clientData.id == player.clientData.id)
+                        continue;
+                    Debug.Log("ADD USER SENT");
+                    addPlayerMsg.from = player.clientData.id;
+                    addPlayerMsg.to = playerData.Value.clientData.id;
+                    Send(addPlayerMsg);
+                    addPlayerMsg.from = playerData.Value.clientData.id;
+                    addPlayerMsg.to = player.clientData.id;
+                    Send(addPlayerMsg);
+                }
             }
 
             while(removePlayerQ.Count > 0)
@@ -90,10 +107,19 @@ namespace SmashDomeNetwork
                 try
                 {
                     //destory object and remove them from users
-                    PlayerData playerData = users[player];
-                    Destroy(playerData.obj);
-                    playerData.clientData.socket.Close();
+                    PlayerData playerD = users[player];
+                    Destroy(playerD.obj);
+                    playerD.clientData.socket.Close();
                     users.Remove(player);
+                    LogoutMsg logoutMsg = new LogoutMsg(player);
+                    KeyValuePair<int, PlayerData>[] players = users.ToArray();
+                    foreach (KeyValuePair<int, PlayerData> playerData in players)
+                    {
+                        if (playerData.Value.clientData.id == player)
+                            continue;
+                        logoutMsg.to = playerData.Value.clientData.id;
+                        Send(logoutMsg);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -141,7 +167,6 @@ namespace SmashDomeNetwork
                     try
                     {
                         msg = JsonUtility.FromJson<Message>(newMsg);
-                        Debug.Log("WORKED");
                     }
                     catch (ArgumentException e) //used to test what errors occur with Json messaging
                     {
@@ -162,6 +187,7 @@ namespace SmashDomeNetwork
                             if(true) //eventually check if VR player
                             {
                                 Move(newMsg);
+
                             }
                             else
                             {
@@ -203,7 +229,20 @@ namespace SmashDomeNetwork
             Player playerController = users[moveMsg.from].playerControl;
             playerController.position = moveMsg.pos;
             playerController.rotation = moveMsg.playerRotation;
-            playerController.cameratRotation = moveMsg.camerRotation;
+            playerController.cameratRotation = moveMsg.cameraRotation;
+
+            foreach (PlayerData player in users.Values)
+            {
+                if (player.clientData.id == moveMsg.from)
+                    continue;
+                moveMsg.to = player.clientData.id;
+                Send(moveMsg);
+                
+            }
+                                    
+
+
+
         }
         private void Shoot(string msg)
         {
@@ -218,6 +257,44 @@ namespace SmashDomeNetwork
 
         }
 
+        private void SendSnapshot()
+        {
+            while (true) {
+                DateTime prevTime = DateTime.Now;
+                DateTime curTime;
+                double time = 0;
+                while (users.Count > 1)
+                {
+                    curTime = DateTime.Now;
+                    time += (curTime - prevTime).TotalSeconds;
+                    Debug.Log(time);
+                    if (time > 0.2f)
+                    {
+                        SnapshotMsg snapshot = new SnapshotMsg();
+                        List<ClientData> clients = new List<ClientData>();
+                        KeyValuePair<int, PlayerData>[] players = users.ToArray();
+                        foreach (KeyValuePair<int, PlayerData> playerKey in players)
+                        {
+                            PlayerData playerData = playerKey.Value;
+                            Player playerController = playerData.playerControl;
+                            snapshot.userId.Add(playerData.clientData.id);
+                            snapshot.positions.Add(playerController.position);
+                            snapshot.rotation.Add(playerController.rotation);
+                            snapshot.camRotation.Add(playerController.cameratRotation);
+                            clients.Add(playerData.clientData);
+                        }
+
+                        Send(clients.ToArray(), snapshot);
+                        time = 0;
+                    }
+                    prevTime = DateTime.Now;
+                }
+
+                SpinWait.SpinUntil(() => users.Count > 1);
+            }
+
+        }
+
 
 
 
@@ -225,10 +302,14 @@ namespace SmashDomeNetwork
         public void Send(Message msg)
         {
             byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
-            ClientData cli = users.ElementAt(msg.to).Value.clientData;
+            ClientData cli = users[msg.to].clientData;
             server.SendMsg(cli, json);
         }
-        
-        
+        public void Send(ClientData[] clients, Message msg)
+        {
+            byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
+            server.SendMsg(clients, json);
+        }
+
     }
 }

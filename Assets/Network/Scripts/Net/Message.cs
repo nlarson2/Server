@@ -66,7 +66,7 @@ namespace SmashDomeNetwork
     {
         public Vector3 pos;
         public Quaternion playerRotation;
-        public Quaternion camerRotation;
+        public Quaternion cameraRotation;
 
         public MoveMsg(int from)
         {
@@ -101,28 +101,29 @@ namespace SmashDomeNetwork
         public List<int> userId = new List<int>();
         public List<Vector3> positions = new List<Vector3>();
         public List<Quaternion> rotation = new List<Quaternion>();
+        public List<Quaternion> camRotation = new List<Quaternion>();
         public SnapshotMsg()
         {
             this.msgType = 6;
         }
 
     }
-    public class StructureChange : Message
+    public class StructureChangeMsg : Message
     {
-        public StructureChange()
+        public StructureChangeMsg()
         {
             this.msgType = 7;
         }
 
     }
 
-    public class AddPlayer : Message
+    public class AddPlayerMsg : Message
     {
         public int playerType;
-        public AddPlayer(int playerType)
+        public AddPlayerMsg(int from)
         {
             this.msgType = 8;
-            this.playerType = playerType;
+            this.from = from;
         }
     }
 

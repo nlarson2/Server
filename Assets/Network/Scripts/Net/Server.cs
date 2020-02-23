@@ -121,7 +121,7 @@ namespace SmashDomeNetwork
                         }
                     }
                     msgQueue.Enqueue(message);
-                    Debug.Log(message);
+                    //Debug.Log(message);
                 }
                 catch (SocketException e)
                 {
