@@ -24,6 +24,8 @@ namespace SmashDomeNetwork
 
         public Queue<ClientData> newUserData = new Queue<ClientData>();
         public Queue<String> msgQueue = new Queue<String>();
+
+        private List<Thread> threads = new List<Thread>();
         
         public Server(int port)
         {
@@ -67,8 +69,8 @@ namespace SmashDomeNetwork
                     byte[] message = msg.GetMessage();
                     stream.Write(message, 0, message.Length);
 
-                    Thread thread = new Thread(() => ReceiveMsg(clientData));
-                    thread.Start();
+                    threads.Add( new Thread(() => ReceiveMsg(clientData)));
+                    threads[threads.Count-1].Start();
                 }
             }
             catch (SocketException exception)
@@ -91,16 +93,27 @@ namespace SmashDomeNetwork
                 try
                 {
                     message = String.Empty;
+                    int brackets = 0;
                     while (true)
                     {
                         buffer = new Byte[256];
 
 
                         int bytesReceived = stream.ReadByte();
-                        message += (char)bytesReceived;
-                        if (message.IndexOf("}") > -1)
+
+                        if ((char)bytesReceived == '{')
                         {
-                            break;
+                            brackets++;
+                        }
+                        if (brackets > 0)
+                        {
+                            message += (char)bytesReceived;
+                        }
+                        if ((char)bytesReceived == '}')
+                        {
+                            brackets--;
+                            if (brackets == 0)
+                                break;
                         }
                     }
                     msgQueue.Enqueue(message);
@@ -150,6 +163,11 @@ namespace SmashDomeNetwork
 
         private void OnApplicationQuit()
         {
+            foreach(Thread t in threads)
+            {
+                t.Interrupt();
+                t.Abort();
+            }
             listen.Stop();
         }
     }

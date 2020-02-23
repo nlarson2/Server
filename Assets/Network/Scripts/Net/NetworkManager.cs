@@ -13,7 +13,9 @@ using System.Net.Sockets;
 using System.Collections;
 using UnityEngine;
 using Unity.Jobs;
+
 namespace SmashDomeNetwork
+
 {
     class NetworkManager : MonoBehaviour
     {
@@ -27,11 +29,12 @@ namespace SmashDomeNetwork
         public Transform parent;          //Location in hierarchy
         public Transform spawnpoint;       //Spawn point in world
 
-        Queue<PlayerData> instatiatePlayerQ = new Queue<PlayerData>();
-        Queue<PlayerData> removePlayerQ = new Queue<PlayerData>();
+        Queue<PlayerData> instantiatePlayerQ = new Queue<PlayerData>();
+        Queue<int> removePlayerQ = new Queue<int>();
         Queue<Bullet> bulletQ = new Queue<Bullet>();
 
         Thread msgThread; //thread to receive messages continuously
+        Thread snapShot;
 
         //Set up to make NetworkManger a singleton
         private NetworkManager() { }
@@ -75,20 +78,22 @@ namespace SmashDomeNetwork
                 connectingUsers.Add(cli.id, cli);
             }
 
-            while (instatiatePlayerQ.Count > 0)
+            while (instantiatePlayerQ.Count > 0)
             {
-                PlayerData player = instatiatePlayerQ.Dequeue();
+                PlayerData player = instantiatePlayerQ.Dequeue();
                 player.obj = Instantiate(playerPrefab, spawnpoint.position, spawnpoint.rotation, parent);
+                player.playerControl = player.obj.GetComponent<Player>();
             }
 
             while(removePlayerQ.Count > 0)
             {
-                PlayerData player = removePlayerQ.Dequeue();
-                Destroy(player.obj);
+                int player = removePlayerQ.Dequeue();
                 try
                 {
-                    player.clientData.socket.Close();
-                    users.Remove(player.clientData.id);
+                    PlayerData playerData = users.ElementAt(player).Value;
+                    Destroy(playerData.obj);
+                    playerData.clientData.socket.Close();
+                    users.Remove(player);
                 }
                 catch (Exception e)
                 {
@@ -104,6 +109,20 @@ namespace SmashDomeNetwork
         
         private void OnApplicationQuit()
         {
+
+            try
+            {
+                msgThread.Abort();
+                snapShot.Abort();
+            }
+            catch( Exception e)
+            {
+                Debug.Log(e);
+            }
+            foreach(PlayerData p in users.Values)
+            {
+                p.clientData.socket.Close();
+            }
             server.listen.Stop();
         }
 
@@ -118,19 +137,40 @@ namespace SmashDomeNetwork
                 newMsg = string.Empty;
                 while (server.msgQueue.Count > 0)
                 {
-                    newMsg = server.msgQueue.Dequeue();
-                    msg = JsonUtility.FromJson<Message>(newMsg);
-                    MsgType type = (MsgType)msg.msgType;
-                    switch(type)
+                     newMsg = server.msgQueue.Dequeue();
+                    try
+                    {
+                        msg = JsonUtility.FromJson<Message>(newMsg);
+                        Debug.Log("WORKED");
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Debug.Log(e);
+                        Debug.Log(newMsg);
+                        continue;
+                    }
+                    switch((MsgType)msg.msgType)
                     {
                         case MsgType.LOGIN:
+                            Login(newMsg);
                             break;
                         case MsgType.LOGOUT:
+                            Logout(newMsg);
+                            Debug.Log("LOGGOUT");
                             break;
                         case MsgType.MOVE:
+                            if(true) //eventually check if VR player
+                            {
+                                Move(newMsg);
+                            }
+                            else
+                            {
+                                //MoveVR(newMsg);
+                            }
                             break;
                         case MsgType.SHOOT:
                             break;
+                        /*Shouldn't get any cases below this points*/
                         case MsgType.SNAPSHOT:
                             break;
                         case MsgType.STRUCTURE:
@@ -144,10 +184,47 @@ namespace SmashDomeNetwork
             }
         }
 
+        private void Login(string msg)
+        {
+            LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
+            ClientData clientData = connectingUsers.ElementAt(loginMsg.from).Value;
+            PlayerData playerData = new PlayerData(clientData);
+            instantiatePlayerQ.Enqueue(playerData);
+
+        }
+        private void Logout(string msg)
+        {
+            LogoutMsg logout = JsonUtility.FromJson<LogoutMsg>(msg);
+            removePlayerQ.Enqueue(logout.from);
+        }
+        private void Move(string msg)
+        {
+            MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
+            Player playerController = users.ElementAt(moveMsg.from).Value.playerControl;
+            playerController.position = new Vector3(moveMsg.x, moveMsg.y, moveMsg.z);
+            playerController.rotation = new Quaternion(moveMsg.xr, moveMsg.yr, moveMsg.zr, moveMsg.wr);
+        }
+        private void Shoot(string msg)
+        {
+
+        }
+        private void Snapshot()
+        {
+
+        }
+        private void Structure()
+        {
+
+        }
+
+
+
+
+
         public void Send(Message msg)
         {
             byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
-            ClientData cli= users.ElementAt(msg.to).Value.clientData;
+            ClientData cli = users.ElementAt(msg.to).Value.clientData;
             server.SendMsg(cli, json);
         }
         

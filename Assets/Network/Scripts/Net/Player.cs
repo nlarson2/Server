@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using SmashDomeNetwork;
 
-
 public class Player : MonoBehaviour
 {
 
@@ -14,7 +13,7 @@ public class Player : MonoBehaviour
     public Vector3 position;
     public Vector3 lHandPos;
     public Vector3 rHandPos;
-    public Quaternion rotate;
+    public Quaternion rotation;
     public Quaternion lHandRot;
     public Quaternion rHandRot;
 
@@ -22,7 +21,7 @@ public class Player : MonoBehaviour
     public GameObject rHand;
 
 
-
+   
     // Update is called once per frame
     void Update()
     {
@@ -34,10 +33,10 @@ public class Player : MonoBehaviour
             else
                 transform.position = Vector3.MoveTowards(transform.position, position, Time.deltaTime * speed);
         }
-        if (rotate != transform.rotation)
+        if (rotation != transform.rotation)
         {
             //transform.eulerAngles = rotate.eulerAngles;
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotate, 0.5f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.5f);
         }
 
         if (lHand != null)
