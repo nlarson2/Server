@@ -68,6 +68,7 @@ namespace SmashDomeVoxel
             float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
             Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
 
+            //for (int i = 2; i < lines.Length; i++)
             for (int i = 2; i < lines.Length; i++)
             {
                 sub = lines[i].Split(' ');
@@ -94,6 +95,19 @@ namespace SmashDomeVoxel
             mesh.triangles = triangles.ToArray();
             Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
             meshed = true;
+        }
+
+        void rebuildMesh()
+        {
+            meshed = false;
+            mesh = new Mesh();
+            GetComponent<MeshFilter>().mesh = mesh;
+            checkFaces();
+            mesh.Clear();
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = triangles.ToArray();
+            meshed = true;
+            Debug.Log("OH SH-! WTF HAPPENED TO THE CAPSULE BOIIIIII?!");
         }
 
         Vector3 getPos(int w, int h, int d)
@@ -354,7 +368,10 @@ namespace SmashDomeVoxel
         }
 
         // Update is called once per frame
-        float time = 0;
+        float time = 0.0f;         // Not sure what this was for so i'm not messing with it
+        float waitTime = 3.0f;  // Ten seconds
+        float timer = 0.0f;        // Starting time
+        bool timerWentOff = false;
         bool hasran = false;
         void Update()
         {
@@ -363,6 +380,37 @@ namespace SmashDomeVoxel
                 this.netManager = NetworkManager.Instance;
                 return;
             }
+
+            if (timer < 3)
+            {
+                timer += Time.deltaTime;
+                Debug.Log(timer);
+            }
+
+            if (!timerWentOff)
+            {
+                if (timer > waitTime)
+                {
+                    for(int i = 0; i < 10; i++)
+                    {
+                        for(int j = 0; j < 10; j++)
+                        {
+                            for (int k = 0; k < 10; k++)
+                            {
+                                voxel[i, j, k] = null;
+
+                            }
+                        }
+                    }
+                    Debug.Log("I got here");
+                    mesh.Clear();
+                    vertices.Clear();
+                    triangles.Clear();
+                    timerWentOff = true;
+                    rebuildMesh();
+                }
+            }
+
             if(!hasran && meshed)
             {
 
@@ -377,15 +425,12 @@ namespace SmashDomeVoxel
 
         }
 
-
-
         private void OnDrawGizmos()
         {
             float size = (float)Math.Pow(2, this.size) * this.scale;
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(this.transform.position, new Vector3(size, size, size));
         }
-
 
     }
 }
