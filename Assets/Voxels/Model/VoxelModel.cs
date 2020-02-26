@@ -96,7 +96,7 @@ namespace SmashDomeVoxel
             mesh.triangles = triangles.ToArray();
             mesh.RecalculateBounds();
             myMC.sharedMesh = mesh;
-            Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
+            //Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
             meshed = true;
         }
 
@@ -120,7 +120,7 @@ namespace SmashDomeVoxel
             mesh.RecalculateBounds();
             myMC.sharedMesh = mesh;
             meshed = true;
-            Debug.Log("OH SH-! WTF HAPPENED TO THE CAPSULE BOIIIIII?!");
+            //Debug.Log("OH SH-! WTF HAPPENED TO THE CAPSULE BOIIIIII?!");
 
         }
 
@@ -296,12 +296,12 @@ namespace SmashDomeVoxel
             }
             foreach (MeshRange m in back)
             {
-                Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
+                //Debug.Log(string.Format("begin {0}  end {1}", m.begin, m.end));
                 Vector3 topleft = getPos((int)m.begin.x, (int)m.begin.y, (int)m.begin.z);
                 Vector3 bottomleft = getPos((int)m.begin.x, (int)m.end.y, (int)m.begin.z);
                 Vector3 bottomright = getPos((int)m.end.x, (int)m.end.y, (int)m.begin.z);
                 Vector3 topright = getPos((int)m.end.x, (int)m.begin.y, (int)m.begin.z);
-                Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
+                //Debug.Log(string.Format("TOPLEFT: {0}  BOTTOMLEFT: {1}  BOTTOMRIGHT: {2}  TOPRIGHT: {3}", topleft, bottomleft, bottomright, topright));
                 vertices.Add(topleft + new Vector3(adjust, adjust, -adjust)); //RUB
                 vertices.Add(bottomleft + new Vector3(adjust, -adjust, -adjust)); //RDB
                 vertices.Add(bottomright + new Vector3(-adjust, -adjust, -adjust)); //LDB
@@ -393,21 +393,23 @@ namespace SmashDomeVoxel
         {
             if (collision.gameObject.tag != "Model")
             {
-                Debug.Log("Shit done did collided");
+                //Debug.Log("Shit done did collided");
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
 
-                    int posx = (int)((contactLocation.point.x + 2) * 4);
-                    int posy = (int)((contactLocation.point.y + 2) * 4);
-                    int posz = (int)((contactLocation.point.z + 2) * 4);
-                    
-                    voxel[posy, posx, posz] = null;
+                    int posx = (int)((contactLocation.point.x + 2) * 3.9);
+                    int posy = (int)((contactLocation.point.y + 2) * 3.9);
+                    int posz = (int)((contactLocation.point.z + 2) * 3.9);
+                    Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
+                    if (voxel[posy, posx,posz] == null)
+                        Debug.Log("Already NULL");
+                    voxel[15-posy, 15-posx, 15-posz] = null;
 
 
                 }
                 resetMesh();
                 rebuildMesh();
-                Destroy(collision.gameObject);
+                //Destroy(collision.gameObject);
             }
         }
 
@@ -460,7 +462,7 @@ namespace SmashDomeVoxel
 
             
            
-            Debug.Log("Oh shit boi what the fuck is going on we hittin all the shits");
+           // Debug.Log("Oh shit boi what the fuck is going on we hittin all the shits");
            
             
             //this.gameObject.GetComponent<Collider>().enabled = false;
