@@ -89,25 +89,39 @@ namespace SmashDomeVoxel
             }
 
             //func it up here
+            MeshCollider myMC = GetComponent<MeshCollider>();
             checkFaces();
             mesh.Clear();
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
+            mesh.RecalculateBounds();
+            myMC.sharedMesh = mesh;
             Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
             meshed = true;
+        }
+
+        void resetMesh()
+        {
+            mesh.Clear();
+            vertices.Clear();
+            triangles.Clear();
         }
 
         void rebuildMesh()
         {
             meshed = false;
+            MeshCollider myMC = GetComponent<MeshCollider>();
             mesh = new Mesh();
             GetComponent<MeshFilter>().mesh = mesh;
             checkFaces();
             mesh.Clear();
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
+            mesh.RecalculateBounds();
+            myMC.sharedMesh = mesh;
             meshed = true;
             Debug.Log("OH SH-! WTF HAPPENED TO THE CAPSULE BOIIIIII?!");
+
         }
 
         Vector3 getPos(int w, int h, int d)
@@ -368,11 +382,36 @@ namespace SmashDomeVoxel
         }
 
         // Update is called once per frame
-        float time = 0.0f;         // Not sure what this was for so i'm not messing with it
-        float waitTime = 3.0f;  // Ten seconds
-        float timer = 0.0f;        // Starting time
+        float time = 0.0f;          // Not sure what this was for so i'm not messing with it
+        float waitTime = 1.0f;      // Ten seconds
+        float timer = 0.0f;         // Starting time
         bool timerWentOff = false;
         bool hasran = false;
+        public bool collided = false;
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (collision.gameObject.tag != "Model")
+            {
+                Debug.Log("Shit done did collided");
+                foreach (ContactPoint contactLocation in collision.contacts)
+                {
+
+                    int posx = (int)((contactLocation.point.x + 2) * 4);
+                    int posy = (int)((contactLocation.point.y + 2) * 4);
+                    int posz = (int)((contactLocation.point.z + 2) * 4);
+                    
+                    voxel[posy, posx, posz] = null;
+
+
+                }
+                resetMesh();
+                rebuildMesh();
+                Destroy(collision.gameObject);
+            }
+        }
+
+
         void Update()
         {
             if(this.netManager == null)
@@ -381,35 +420,31 @@ namespace SmashDomeVoxel
                 return;
             }
 
-            if (timer < 3)
-            {
-                timer += Time.deltaTime;
-                Debug.Log(timer);
-            }
+            //if (timer < waitTime)
+            //{
+            //    timer += Time.deltaTime;
+            //    Debug.Log(timer);
+            //}
 
-            if (!timerWentOff)
-            {
-                if (timer > waitTime)
-                {
-                    for(int i = 0; i < 10; i++)
-                    {
-                        for(int j = 0; j < 10; j++)
-                        {
-                            for (int k = 0; k < 10; k++)
-                            {
-                                voxel[i, j, k] = null;
-
-                            }
-                        }
-                    }
-                    Debug.Log("I got here");
-                    mesh.Clear();
-                    vertices.Clear();
-                    triangles.Clear();
-                    timerWentOff = true;
-                    rebuildMesh();
-                }
-            }
+            //if (!timerWentOff)
+            //{
+            //    if (timer > waitTime)
+            //    {
+            //        for(int i = 0; i < 10; i++)
+            //        {
+            //            for(int j = 0; j < 10; j++)
+            //            {
+            //                for (int k = 0; k < 10; k++)
+            //                {
+            //                    voxel[i, j, k] = null;
+            //                }
+            //            }
+            //        }
+            //        resetMesh();
+            //        rebuildMesh();
+            //        timerWentOff = true;
+            //    }
+            //}
 
             if(!hasran && meshed)
             {
@@ -422,6 +457,21 @@ namespace SmashDomeVoxel
                 hasran = true;
 
             }
+
+            
+           
+            Debug.Log("Oh shit boi what the fuck is going on we hittin all the shits");
+           
+            
+            //this.gameObject.GetComponent<Collider>().enabled = false;
+            
+
+
+
+        }
+
+        public void FindCube()
+        {
 
         }
 
