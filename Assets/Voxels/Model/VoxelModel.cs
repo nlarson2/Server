@@ -393,7 +393,7 @@ namespace SmashDomeVoxel
         {
             if (collision.gameObject.tag != "Model")
             {
-                //Debug.Log("Shit done did collided");
+                
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
 
@@ -409,7 +409,7 @@ namespace SmashDomeVoxel
                 }
                 resetMesh();
                 rebuildMesh();
-                //Destroy(collision.gameObject);
+                Destroy(collision.gameObject); // Destroys object that collided with our Model
             }
         }
 
