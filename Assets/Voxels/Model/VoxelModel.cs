@@ -66,6 +66,7 @@ namespace SmashDomeVoxel
             float r, g, b;
 
             float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
+            Debug.Log(firstChange);
             Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
 
             //for (int i = 2; i < lines.Length; i++)
@@ -91,9 +92,9 @@ namespace SmashDomeVoxel
             //func it up here
             MeshCollider myMC = GetComponent<MeshCollider>();
             checkFaces();
-            mesh.Clear();
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
+            mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             myMC.sharedMesh = mesh;
             //Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
@@ -118,6 +119,7 @@ namespace SmashDomeVoxel
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
             mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
             myMC.sharedMesh = mesh;
             meshed = true;
             //Debug.Log("OH SH-! WTF HAPPENED TO THE CAPSULE BOIIIIII?!");
@@ -185,7 +187,7 @@ namespace SmashDomeVoxel
         {
             float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
             Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
-            float adjust = this.scale / 2;
+            float adjust = this.scale / 2.0f;
             int vertexCount = 0;
             //Vector3 cubePos = startPos  + (new Vector3(-w, -h, -d)) * this.scale;
             //loop through and turn on faces that are visible
@@ -396,20 +398,36 @@ namespace SmashDomeVoxel
                 
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
-
-                    int posx = (int)((contactLocation.point.x + 2) * 3.9);
-                    int posy = (int)((contactLocation.point.y + 2) * 3.9);
-                    int posz = (int)((contactLocation.point.z + 2) * 3.9);
-                    Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
-                    if (voxel[posy, posx,posz] == null)
-                        Debug.Log("Already NULL");
-                    voxel[15-posy, 15-posx, 15-posz] = null;
+                    try
+                    {
+                        int posx = (int)((contactLocation.point.x + 2) * 4);
+                        int posy = (int)((contactLocation.point.y + 2) * 4 + .5);
+                        int posz = (int)((contactLocation.point.z + 2) * 4);
+                        Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
+                        Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                        if (posy > 15 || posy < 0)
+                            Debug.Log(string.Format("POSY: {0} {1}", posy, contactLocation.point.y));
+                        if (posx > 15 || posx < 0)
+                            Debug.Log(string.Format("POSX: {0} {1}", posx, contactLocation.point.x));
+                        if (posz > 15 || posz < 0)
+                            Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
+                        if (voxel[posy, posx, posz] == null)
+                            Debug.Log("Already NULL");
+                        voxel[15 - posy, 15 - posx, 15 - posz] = null;
+                    }
+                    catch(Exception e)
+                    {
+                        Destroy(collision.gameObject);
+                    }
 
 
                 }
                 resetMesh();
                 rebuildMesh();
                 Destroy(collision.gameObject); // Destroys object that collided with our Model
+                //collision.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                //collision.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                //collision.gameObject.GetComponent<Collider>().enabled = false;
             }
         }
 
