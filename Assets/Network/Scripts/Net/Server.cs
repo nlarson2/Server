@@ -33,7 +33,7 @@ namespace SmashDomeNetwork
             Debug.Log("BUILDING SERVER");
             this.port = port; //50000
             listen = new TcpListener(IPAddress.Any, port);
-            Debug.Log("Listening on Port 50000");
+            Debug.Log("Listening on Port "+port.ToString());
             idCount = 1; connectionCount = 0;
             
             //start thread to listen

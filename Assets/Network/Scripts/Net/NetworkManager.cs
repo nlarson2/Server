@@ -27,12 +27,13 @@ namespace SmashDomeNetwork
         public List<StructureChangeMsg> structures = new List<StructureChangeMsg>();
 
         public GameObject playerPrefab;   //Networked player model
+        public GameObject bulletPrefab;
         public Transform parent;          //Location in hierarchy
         public Transform spawnpoint;       //Spawn point in world
 
         Queue<ClientData> instantiatePlayerQ = new Queue<ClientData>();
         Queue<int> removePlayerQ = new Queue<int>();
-        Queue<Bullet> bulletQ = new Queue<Bullet>();
+        Queue<ShootMsg> bulletQ = new Queue<ShootMsg>();
 
         Thread msgThread; //thread to receive messages continuously
         Thread snapShot;
@@ -54,7 +55,7 @@ namespace SmashDomeNetwork
                     if (instance == null)
                     {
                         instance = value;
-                        instance.server = new Server(50000);
+                        instance.server = new Server(44444);
                     }
                 }
 
@@ -134,7 +135,15 @@ namespace SmashDomeNetwork
             
             while(bulletQ.Count > 0)
             {
+                ShootMsg shootMsg = bulletQ.Dequeue();
                 //waiting on bullets
+                GameObject bull = Instantiate(bulletPrefab,shootMsg.position, transform.rotation);
+                Rigidbody rig = bull.GetComponent<Rigidbody>();
+                rig.useGravity = false;
+                //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
+                //rig.AddForce((transform.forward + transform.up / 4) * 2.0f);
+                rig.AddForce(shootMsg.direction);
+                Debug.Log("FIRED");
             }
         }
         
@@ -201,6 +210,7 @@ namespace SmashDomeNetwork
                             }
                             break;
                         case MsgType.SHOOT:
+                            Shoot(newMsg);                            
                             break;
                         /*Shouldn't get any cases below this points*/
                         case MsgType.SNAPSHOT:
@@ -253,6 +263,23 @@ namespace SmashDomeNetwork
         }
         private void Shoot(string msg)
         {
+            ShootMsg shoot = JsonUtility.FromJson<ShootMsg>(msg);
+            bulletQ.Enqueue(shoot);
+            foreach(PlayerData playerData in users.Values)
+            {
+                if(playerData.clientData.id != shoot.from)
+                {
+                    try
+                    {
+                        shoot.to = playerData.clientData.id;
+                        Send(shoot);
+                    }
+                    catch(Exception e)
+                    {
+                        //Debug.Log(e);
+                    }
+                }
+            }
 
         }
         private void Snapshot()

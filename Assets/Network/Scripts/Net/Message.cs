@@ -88,6 +88,8 @@ namespace SmashDomeNetwork
 
     public class ShootMsg : Message
     {
+        public Vector3 position;
+        public Vector3 direction;
         public ShootMsg(int from)
         {
             this.msgType = 5;
