@@ -25,12 +25,12 @@ public class Shoot : MonoBehaviour
         if (mousedown && curtime > fireRate)
         {
             Vector3 dir = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-            GameObject bull = Instantiate(bullet, transform.localPosition + (transform.forward + cam.forward)/4, transform.rotation);
+            GameObject bull = Instantiate(bullet, transform.localPosition + transform.forward, transform.rotation);
             Rigidbody rig = bull.GetComponent<Rigidbody>();
             rig.useGravity = false;
             //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
             //rig.AddForce((transform.forward + transform.up / 4) * 2.0f);
-            rig.AddForce(cam.forward * 2.0f);
+            rig.AddForce(cam.forward);
             curtime = 0;
         }
 

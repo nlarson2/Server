@@ -53,7 +53,7 @@ namespace SmashDomeVoxel
 
             string[] lines = File.ReadAllLines(this.inputfile);
             string size = lines[0], scale = lines[1];
-
+            this.scale = 1.0f;
             Int32.TryParse(size, out this.size);
             float.TryParse(scale, out this.scale);
             voxelArraySize = (int)Math.Pow(2, this.size);
@@ -401,10 +401,10 @@ namespace SmashDomeVoxel
                     try
                     {
                         int posx = (int)((contactLocation.point.x + 2) * 4);
-                        int posy = (int)((contactLocation.point.y + 2) * 4 + .5);
+                        int posy = (int)((contactLocation.point.y + 2) * 4);
                         int posz = (int)((contactLocation.point.z + 2) * 4);
                         Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
-                        Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                        //Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
                         if (posy > 15 || posy < 0)
                             Debug.Log(string.Format("POSY: {0} {1}", posy, contactLocation.point.y));
                         if (posx > 15 || posx < 0)
@@ -413,7 +413,15 @@ namespace SmashDomeVoxel
                             Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
                         if (voxel[posy, posx, posz] == null)
                             Debug.Log("Already NULL");
+
                         voxel[15 - posy, 15 - posx, 15 - posz] = null;
+                        voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
+                        voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
+                        voxel[15 - posy, 15 - posx, 15 - posz+1] = null;
+                        voxel[15 - posy, 15 - posx+1, 15 - posz] = null;
+                        voxel[15 - posy + 1, 15 - posx+1, 15 - posz + 1] = null;
+                        voxel[15 - posy + 1, 15 - posx+1, 15 - posz] = null;
+                        voxel[15 - posy, 15 - posx+1, 15 - posz + 1] = null;
                     }
                     catch(Exception e)
                     {
