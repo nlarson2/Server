@@ -34,9 +34,12 @@ namespace SmashDomeVoxel
         }
 
 
-
+        public int cubesInRow = 2;
+        public float pieceSize = 0.2f;
+        float cubesPivotDistance;
+        Vector3 cubesPivot;
         public int size;
-        public Cube[,,] voxel = null;
+        public static Cube[,,] voxel = null;
         public GameObject cube;
         public float scale;
         int voxelArraySize;
@@ -48,6 +51,9 @@ namespace SmashDomeVoxel
 
         void Start()
         {
+            cubesPivotDistance = pieceSize * cubesInRow / 2;
+            cubesPivot = new Vector3(cubesPivotDistance, cubesPivotDistance, cubesPivotDistance);
+
             mesh = new Mesh();
             GetComponent<MeshFilter>().mesh = mesh;
 
@@ -122,12 +128,11 @@ namespace SmashDomeVoxel
             mesh.RecalculateNormals();
             myMC.sharedMesh = mesh;
             meshed = true;
-            //Debug.Log("OH SH-! WTF HAPPENED TO THE CAPSULE BOIIIIII?!");
-
         }
 
         Vector3 getPos(int w, int h, int d)
         {
+            //Debug.Log(this.scale);
             float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
             Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
             return startPos + (new Vector3(-w, -h, -d)) * this.scale;
@@ -210,7 +215,7 @@ namespace SmashDomeVoxel
                             continue;
 
                         Vector3 pos = getPos(w, h, d);
-                        //Debug.Log("POSE" + pos.ToString());
+                        //Debug.Log("POS" + pos.ToString());
 
                         Vector3 arrayPos = new Vector3(w, h, d);
 
@@ -390,49 +395,81 @@ namespace SmashDomeVoxel
         bool timerWentOff = false;
         bool hasran = false;
         public bool collided = false;
+        public Transform explosionPrefab;
+
 
         private void OnCollisionEnter(Collision collision)
         {
             if (collision.gameObject.tag != "Model")
             {
-                
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
                     try
                     {
+                        //Debug.Log(string.Format("Location of Collision Before Calculation: Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
                         int posx = (int)((contactLocation.point.x + 2) * 4);
                         int posy = (int)((contactLocation.point.y + 2) * 4);
                         int posz = (int)((contactLocation.point.z + 2) * 4);
-                        Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
-                        //Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                        Debug.Log(string.Format("Location of Collision: Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
+                        Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
                         if (posy > 15 || posy < 0)
-                            Debug.Log(string.Format("POSY: {0} {1}", posy, contactLocation.point.y));
+                        {
+                            Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
+                            if (posy > 15)
+                                posy = 15; Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
+                            if (posy < 0)
+                                posy = 0; Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
+                        }
                         if (posx > 15 || posx < 0)
-                            Debug.Log(string.Format("POSX: {0} {1}", posx, contactLocation.point.x));
+                        {
+                            Debug.Log(string.Format("Point of collision outside bounds! POSX: {0} {1}", posx, contactLocation.point.x));
+                            if (posx > 15)
+                                posx = 15; Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSX: " +  posx);
+                            if (posx < 0)
+                                posx = 0; Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSX: " + posx);
+                        }
+
                         if (posz > 15 || posz < 0)
-                            Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
+                        {
+                            Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posz, contactLocation.point.z));
+                            if (posz > 15)
+                                posz = 15; Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSZ: " +  posz);
+                            if (posz < 0)
+                                posz = 0; Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSZ: " + posz);
+                        }
+
+                        Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
                         if (voxel[posy, posx, posz] == null)
                             Debug.Log("Already NULL");
 
                         voxel[15 - posy, 15 - posx, 15 - posz] = null;
-                        voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
-                        voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
-                        voxel[15 - posy, 15 - posx, 15 - posz+1] = null;
-                        voxel[15 - posy, 15 - posx+1, 15 - posz] = null;
-                        voxel[15 - posy + 1, 15 - posx+1, 15 - posz + 1] = null;
-                        voxel[15 - posy + 1, 15 - posx+1, 15 - posz] = null;
-                        voxel[15 - posy, 15 - posx+1, 15 - posz + 1] = null;
+                        //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
+                        //voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
+                        //voxel[15 - posy, 15 - posx, 15 - posz+1] = null;
+                        //voxel[15 - posy, 15 - posx+1, 15 - posz] = null;
+                        //voxel[15 - posy + 1, 15 - posx+1, 15 - posz + 1] = null;
+                        //voxel[15 - posy + 1, 15 - posx+1, 15 - posz] = null;
+                        //voxel[15 - posy, 15 - posx+1, 15 - posz + 1] = null;
                     }
                     catch(Exception e)
                     {
                         Destroy(collision.gameObject);
+
                     }
-
-
                 }
                 resetMesh();
                 rebuildMesh();
                 Destroy(collision.gameObject); // Destroys object that collided with our Model
+                for (int x = 0; x < cubesInRow; x++)
+                {
+                    for (int y = 0; y < cubesInRow; y++)
+                    {
+                        for (int z = 0; z < cubesInRow; z++)
+                        {
+                            shatterCube(x, y, z);
+                        }
+                    }
+                }
                 //collision.gameObject.GetComponent<Rigidbody>().useGravity = false;
                 //collision.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 //collision.gameObject.GetComponent<Collider>().enabled = false;
@@ -440,12 +477,53 @@ namespace SmashDomeVoxel
         }
 
 
+        void shatterCube(int x, int y, int z)
+        {
+            // Create piece cube will be broken into
+            GameObject piece;
+            
+            piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            // Setup piece's position
+            piece.transform.position = transform.position + new Vector3(pieceSize * x, pieceSize * y, pieceSize * z) - cubesPivot;
+            piece.transform.localScale = new Vector3(pieceSize, pieceSize, pieceSize);
+
+            //Add rigid body to piece
+            //piece.AddComponent<RigidBody>();
+            //piece.GetComponent<Rigidbody>().mass = pieceSize;
+        }
+
         void Update()
         {
             if(this.netManager == null)
             {
                 this.netManager = NetworkManager.Instance;
                 return;
+            }
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                Debug.Log("Got here");
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out hit, 100.0f))
+                {
+                    //Vector3 forward = transform.TransformDirection(Vector3.forward) * 10;
+                    void OnCollisionEnter(Collision collision)
+                    {
+                        foreach (ContactPoint contact in collision.contacts)
+                        {
+                            Debug.DrawLine(contact.point, contact.point, Color.green, 2, false);
+                        }
+                    }
+                    Destroy(hit.transform.gameObject);
+                    // Draws raycast line in scene
+                    // DrawRay   (start position,     end position,                         color,      duration of time )
+                    Debug.DrawRay(transform.position, Camera.main.transform.forward * 10, Color.green, 10.0f);
+                    Debug.Log("You hit the " + hit.transform.name); // ensure you picked right object
+                    Vector3 pointOfCollision = hit.point;
+                    Debug.Log("Hit at point: " + pointOfCollision.ToString("F4"));
+                }
             }
 
             //if (timer < waitTime)
@@ -474,7 +552,7 @@ namespace SmashDomeVoxel
             //    }
             //}
 
-            if(!hasran && meshed)
+            if (!hasran && meshed)
             {
 
                 StructureChangeMsg outMsg = new StructureChangeMsg();
@@ -485,17 +563,7 @@ namespace SmashDomeVoxel
                 hasran = true;
 
             }
-
-            
-           
-           // Debug.Log("Oh shit boi what the fuck is going on we hittin all the shits");
-           
-            
             //this.gameObject.GetComponent<Collider>().enabled = false;
-            
-
-
-
         }
 
         public void FindCube()
