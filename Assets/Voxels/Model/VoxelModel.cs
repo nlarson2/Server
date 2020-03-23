@@ -400,7 +400,8 @@ namespace SmashDomeVoxel
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (collision.gameObject.tag != "Model")
+            //This logic verifies that in order to destroy part of the model, the object colliding with the model must be a bullet (with tag = "Bullet")
+            if (collision.gameObject.tag == "Bullet")
             {
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
@@ -410,38 +411,41 @@ namespace SmashDomeVoxel
                         int posx = (int)((contactLocation.point.x + 2) * 4);
                         int posy = (int)((contactLocation.point.y + 2) * 4);
                         int posz = (int)((contactLocation.point.z + 2) * 4);
-                        Debug.Log(string.Format("Location of Collision: Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
-                        Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                        //Debug.Log(string.Format("Location of Collision: Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
+                        //Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
                         if (posy > 15 || posy < 0)
                         {
-                            Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
+                            //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
                             if (posy > 15)
-                                posy = 15; Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
+                                posy = 15; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
                             if (posy < 0)
-                                posy = 0; Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
+                                posy = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
                         }
                         if (posx > 15 || posx < 0)
                         {
-                            Debug.Log(string.Format("Point of collision outside bounds! POSX: {0} {1}", posx, contactLocation.point.x));
+                            //Debug.Log(string.Format("Point of collision outside bounds! POSX: {0} {1}", posx, contactLocation.point.x));
                             if (posx > 15)
-                                posx = 15; Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSX: " +  posx);
+                                posx = 15; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSX: " +  posx);
                             if (posx < 0)
-                                posx = 0; Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSX: " + posx);
+                                posx = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSX: " + posx);
                         }
 
                         if (posz > 15 || posz < 0)
                         {
-                            Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posz, contactLocation.point.z));
+                            //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posz, contactLocation.point.z));
                             if (posz > 15)
-                                posz = 15; Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSZ: " +  posz);
+                                posz = 15; /*Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSZ: " +  posz);*/
                             if (posz < 0)
-                                posz = 0; Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSZ: " + posz);
+                                posz = 0; /*Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSZ: " + posz);*/
                         }
 
-                        Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
+                        //Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
                         if (voxel[posy, posx, posz] == null)
                             Debug.Log("Already NULL");
 
+                        Debug.Log(string.Format("POSX: {0} VoxelPosX: {1}", posx, (15 - posx)));
+
+                        //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
                         voxel[15 - posy, 15 - posx, 15 - posz] = null;
                         //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
                         //voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
@@ -454,22 +458,26 @@ namespace SmashDomeVoxel
                     catch(Exception e)
                     {
                         Destroy(collision.gameObject);
-
                     }
                 }
                 resetMesh();
                 rebuildMesh();
+                Debug.Log(collision.gameObject.transform.position);
+                float bulletx = collision.gameObject.transform.position.x;
+                float bullety = collision.gameObject.transform.position.y;
+                float bulletz = collision.gameObject.transform.position.z;
+                shatterCube(bulletx, bullety, bulletz);
                 Destroy(collision.gameObject); // Destroys object that collided with our Model
-                for (int x = 0; x < cubesInRow; x++)
-                {
-                    for (int y = 0; y < cubesInRow; y++)
-                    {
-                        for (int z = 0; z < cubesInRow; z++)
-                        {
-                            shatterCube(x, y, z);
-                        }
-                    }
-                }
+                //for (int x = 0; x < cubesInRow; x++)
+                //{
+                //    for (int y = 0; y < cubesInRow; y++)
+                //    {
+                //        for (int z = 0; z < cubesInRow; z++)
+                //        {
+                //            shatterCube(x, y, z);
+                //        }
+                //    }
+                //}
                 //collision.gameObject.GetComponent<Rigidbody>().useGravity = false;
                 //collision.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 //collision.gameObject.GetComponent<Collider>().enabled = false;
@@ -477,20 +485,34 @@ namespace SmashDomeVoxel
         }
 
 
-        void shatterCube(int x, int y, int z)
+        void shatterCube(float spawnx, float spawny, float spawnz)
         {
-            // Create piece cube will be broken into
-            GameObject piece;
+            float thrust = 1.0f;
+            for (int x = 0; x < 3; x++)
+            {
+                for(int y = 0; y < 3; y++)
+                {
+                    for (int z = 0; z < 3; z++)
+                    {
+                        // Create piece cube will be broken into
+                        GameObject piece;
+                        piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+                        // Setup piece's position
+                        piece.transform.position = new Vector3( spawnx+(x/10), spawny+(y/10), spawnz+(z/10));
+                        piece.transform.localScale = new Vector3(pieceSize/4, pieceSize/4, pieceSize/4);
+
+                        //Add rigid body to piece
+                        Rigidbody pieceRB = piece.AddComponent<Rigidbody>();
+                        pieceRB.AddForce(0,0,thrust,ForceMode.Impulse);
+                        pieceRB.useGravity = true;
+
+                    }
+                }
+
+            }
             
-            piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-            // Setup piece's position
-            piece.transform.position = transform.position + new Vector3(pieceSize * x, pieceSize * y, pieceSize * z) - cubesPivot;
-            piece.transform.localScale = new Vector3(pieceSize, pieceSize, pieceSize);
-
-            //Add rigid body to piece
-            //piece.AddComponent<RigidBody>();
-            //piece.GetComponent<Rigidbody>().mass = pieceSize;
+           
         }
 
         void Update()
@@ -501,6 +523,7 @@ namespace SmashDomeVoxel
                 return;
             }
 
+            //Right click for raycasting. Rays are visible in Scene Editor
             if (Input.GetMouseButtonDown(1))
             {
                 Debug.Log("Got here");

@@ -45,6 +45,7 @@ public class Shoot : MonoBehaviour
             Vector3 dir = new Vector3(transform.position.x, transform.position.y, transform.position.z);
             //GameObject bull = Instantiate(bullet, transform.localPosition + transform.forward, transform.rotation);
             GameObject bull = Instantiate(bullet, Camera.main.transform.position + Camera.main.transform.forward/2, Camera.main.transform.rotation);
+            bull.tag = "Bullet";
             Rigidbody rig = bull.GetComponent<Rigidbody>();
             rig.useGravity = false;
             //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
