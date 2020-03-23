@@ -41,6 +41,7 @@ namespace SmashDomeVoxel
         public int size;
         public static Cube[,,] voxel = null;
         public GameObject cube;
+        public GameObject piece;
         public float scale;
         int voxelArraySize;
         public string inputfile;
@@ -442,11 +443,13 @@ namespace SmashDomeVoxel
                         //Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
                         if (voxel[posy, posx, posz] == null)
                             Debug.Log("Already NULL");
+                        //Debug.Log(string.Format("CUBE POSX: {0} CUBE PosY: {1} CUBE PosZ: {2}",posx,posy,posz));
+                        //Debug.Log(string.Format("Contact POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
 
-                        Debug.Log(string.Format("POSX: {0} VoxelPosX: {1}", posx, (15 - posx)));
 
                         //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
                         voxel[15 - posy, 15 - posx, 15 - posz] = null;
+                        shatterCube(contactLocation.point.x, contactLocation.point.y, contactLocation.point.z);
                         //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
                         //voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
                         //voxel[15 - posy, 15 - posx, 15 - posz+1] = null;
@@ -462,22 +465,13 @@ namespace SmashDomeVoxel
                 }
                 resetMesh();
                 rebuildMesh();
-                Debug.Log(collision.gameObject.transform.position);
+                //Debug.Log(collision.gameObject.transform.position);
                 float bulletx = collision.gameObject.transform.position.x;
                 float bullety = collision.gameObject.transform.position.y;
                 float bulletz = collision.gameObject.transform.position.z;
-                shatterCube(bulletx, bullety, bulletz);
+                //Debug.Log(string.Format("BULLET POSX: {0} BULLET PosY: {1} BULLET PosZ: {2}", bulletx, bullety, bulletz));
+                //shatterCube(bulletx, bullety, bulletz);
                 Destroy(collision.gameObject); // Destroys object that collided with our Model
-                //for (int x = 0; x < cubesInRow; x++)
-                //{
-                //    for (int y = 0; y < cubesInRow; y++)
-                //    {
-                //        for (int z = 0; z < cubesInRow; z++)
-                //        {
-                //            shatterCube(x, y, z);
-                //        }
-                //    }
-                //}
                 //collision.gameObject.GetComponent<Rigidbody>().useGravity = false;
                 //collision.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 //collision.gameObject.GetComponent<Collider>().enabled = false;
@@ -487,27 +481,38 @@ namespace SmashDomeVoxel
 
         void shatterCube(float spawnx, float spawny, float spawnz)
         {
-            float thrust = 1.0f;
-            for (int x = 0; x < 3; x++)
+            //Debug.Log(string.Format("SpawnX: {0} SpawnY: {1} SpawnZ: {2}", spawnx, spawny, spawnz));
+            float thrust = .2f;
+            for (int x = 0; x < 2; x++)
             {
-                for(int y = 0; y < 3; y++)
+                for(int y = 0; y < 2; y++)
                 {
-                    for (int z = 0; z < 3; z++)
+                    for (int z = 0; z < 2; z++)
                     {
-                        // Create piece cube will be broken into
-                        GameObject piece;
-                        piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        Vector3 adjust = new Vector3((float)(x / 8), (float)(y / 8), (float)(z / 8));
+                        //Debug.Log(adjust);
 
-                        // Setup piece's position
-                        piece.transform.position = new Vector3( spawnx+(x/10), spawny+(y/10), spawnz+(z/10));
-                        piece.transform.localScale = new Vector3(pieceSize/4, pieceSize/4, pieceSize/4);
+                        // Create piece cube will be broken into
+                       
+
+                        GameObject obj = Instantiate(piece, new Vector3(spawnx, spawny, spawnz), Quaternion.identity);
+
+                        //obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+
+                        //Setup piece's position
+                        obj.transform.position = new Vector3(spawnx, spawny, spawnz) + adjust;
+                        //Debug.Log(piece.transform.position);
+                        obj.transform.localScale = new Vector3(pieceSize / 8, pieceSize / 8, pieceSize / 8);
+
+                        //Script decay = piece.AddComponent<Decay>();
 
                         //Add rigid body to piece
-                        Rigidbody pieceRB = piece.AddComponent<Rigidbody>();
-                        pieceRB.AddForce(0,0,thrust,ForceMode.Impulse);
-                        pieceRB.useGravity = true;
-
+                        //Rigidbody pieceRB = obj.AddComponent<Rigidbody>();
+                        //pieceRB.AddForce(thrust, 0, thrust, ForceMode.Impulse);
+                        //pieceRB.useGravity = true;
                     }
+ 
                 }
 
             }
@@ -526,7 +531,7 @@ namespace SmashDomeVoxel
             //Right click for raycasting. Rays are visible in Scene Editor
             if (Input.GetMouseButtonDown(1))
             {
-                Debug.Log("Got here");
+                //Debug.Log("Got here");
                 RaycastHit hit;
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 if (Physics.Raycast(ray, out hit, 100.0f))
