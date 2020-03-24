@@ -38,6 +38,8 @@ namespace SmashDomeNetwork
         Thread msgThread; //thread to receive messages continuously
         Thread snapShot;
 
+        public Cerealize cc = new Cerealize();
+
         //Set up to make NetworkManger a singleton
         private NetworkManager() { }
         private static NetworkManager instance = null;
@@ -95,10 +97,11 @@ namespace SmashDomeNetwork
                     Debug.Log("ADD USER SENT");
                     addPlayerMsg.from = player.clientData.id;
                     addPlayerMsg.to = playerData.Value.clientData.id;
-                    Send(addPlayerMsg);
+                    Send((Message)addPlayerMsg);
+
                     addPlayerMsg.from = playerData.Value.clientData.id;
                     addPlayerMsg.to = player.clientData.id;
-                    Send(addPlayerMsg);
+                    Send((Message)addPlayerMsg);
                 }
                 foreach (StructureChangeMsg structMsg in structures)
                 {
@@ -124,7 +127,7 @@ namespace SmashDomeNetwork
                         if (playerData.Value.clientData.id == player)
                             continue;
                         logoutMsg.to = playerData.Value.clientData.id;
-                        Send(logoutMsg);
+                        Send((Message)logoutMsg);
                     }
                 }
                 catch (Exception e)
@@ -170,17 +173,17 @@ namespace SmashDomeNetwork
         //thread continuely runs trying to pull messages form the server
         public void ReceiveMessages()
         {
-            string newMsg;
+            byte[] newMsg;
             Message msg;
             while (true)
             {
-                newMsg = string.Empty;
+                
                 while (server.msgQueue.Count > 0)
                 {
                     newMsg = server.msgQueue.Dequeue();
                     try
                     {
-                        msg = JsonUtility.FromJson<Message>(newMsg);
+                        msg = cc.DeserializeMSG(newMsg);
                     }
                     catch (ArgumentException e) //used to test what errors occur with Json messaging
                     {
@@ -225,24 +228,25 @@ namespace SmashDomeNetwork
             }
         }
 
-        private void Login(string msg)
+        private void Login(byte[] msg)
         {
             //pull new player off connectingUsers on the server and instantiate them into the game
-            LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
+            LoginMsg loginMsg = cc.DeserializeLiMSG(msg);
             ClientData clientData = server.connecting[loginMsg.from];
             server.connecting.Remove(loginMsg.from);
             instantiatePlayerQ.Enqueue(clientData);
             
 
         }
-        private void Logout(string msg)
+        private void Logout(byte[] msg)
         {
-            LogoutMsg logout = JsonUtility.FromJson<LogoutMsg>(msg);
+            LogoutMsg logout = cc.DeserializeLoMSG(msg);
             removePlayerQ.Enqueue(logout.from);
         }
-        private void Move(string msg)
+        private void Move(byte[] msg)
         {
-            MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
+            
+            MoveMsg moveMsg = cc.DeserializeMMSG(msg);
             Player playerController = users[moveMsg.from].playerControl;
             playerController.position = moveMsg.pos;
             playerController.rotation = moveMsg.playerRotation;
@@ -261,9 +265,9 @@ namespace SmashDomeNetwork
 
 
         }
-        private void Shoot(string msg)
+        private void Shoot(byte[] msg)
         {
-            ShootMsg shoot = JsonUtility.FromJson<ShootMsg>(msg);
+            ShootMsg shoot = cc.DeserializeSMSG(msg);
             bulletQ.Enqueue(shoot);
             foreach(PlayerData playerData in users.Values)
             {
@@ -335,14 +339,14 @@ namespace SmashDomeNetwork
 
         public void Send(Message msg)
         {
-            byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
+            byte[] MSG = cc.SerializeMSG(msg);
             ClientData cli = users[msg.to].clientData;
-            server.SendMsg(cli, json);
+            server.SendMsg(cli, MSG);
         }
         public void Send(ClientData[] clients, Message msg)
         {
-            byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
-            server.SendMsg(clients, json);
+            byte[] MSG = cc.SerializeMSG(msg);
+            server.SendMsg(clients, MSG);
         }
 
     }

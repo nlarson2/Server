@@ -23,10 +23,12 @@ namespace SmashDomeNetwork
         public TcpListener listen;
 
         //public Queue<ClientData> newUserData = new Queue<ClientData>();
-        public Queue<String> msgQueue = new Queue<String>();
+        public Queue<byte[]> msgQueue = new Queue<byte[]>();
         public Dictionary<int, ClientData> connecting = new Dictionary<int, ClientData>();
 
         private List<Thread> threads = new List<Thread>();
+
+        public Cerealize cc = new Cerealize();
         
         public Server(int port)
         {
@@ -88,37 +90,37 @@ namespace SmashDomeNetwork
         protected void ReceiveMsg(ClientData client)
         {
             
-            Byte[] buffer;
-            String message;
+            byte[] buffer;
+            byte[] message;
             NetworkStream stream = client.stream;
 
             while (true)
             {
                 try
                 {
-                    message = String.Empty;
-                    int brackets = 0;
                     while (true)
                     {
-                        buffer = new Byte[256];
-
-
-                        int bytesReceived = stream.ReadByte();
-
-                        if ((char)bytesReceived == '{')
+                        buffer = new byte[8];
+                        //reads first 8 bytes
+                        for (int i = 0; i < 8; i++)
                         {
-                            brackets++;
+                            buffer[i] = (byte)(char)stream.ReadByte();
                         }
-                        if (brackets > 0)
+                        //saves 8 bytes into Int64/long
+                        Int64 msgSize = cc.ByteInt64(buffer);
+                        //creates buffer with msg size minus 8 bytes which we add later
+                        buffer = new byte[msgSize - 8];
+
+                        //this adds the first 8 bytes into the buffer at the beginning
+                        buffer = Cerealize.Combine(cc.IntByte(msgSize), buffer);
+
+                        //this reads the rest of the message into new buffer
+                        for (int j = 8; j < msgSize; j++)
                         {
-                            message += (char)bytesReceived;
+                            buffer[j] = (byte)(char)stream.ReadByte();
                         }
-                        if ((char)bytesReceived == '}')
-                        {
-                            brackets--;
-                            if (brackets == 0)
-                                break;
-                        }
+                        message = buffer;
+                        break;
                     }
                     msgQueue.Enqueue(message);
                     //Debug.Log(message);
