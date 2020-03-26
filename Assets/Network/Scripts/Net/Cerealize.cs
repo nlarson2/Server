@@ -18,19 +18,19 @@ namespace SmashDomeNetwork
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.from, msg.to);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(LoginMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.from);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(LogoutMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.from);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(MoveMsg msg)
         {
@@ -38,19 +38,19 @@ namespace SmashDomeNetwork
             byte[] body = BuildMSG(msg.from, msg.pos,
                                     msg.playerRotation,
                                     msg.cameraRotation);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(MoveVRMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.from);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(ShootMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.from);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(SnapshotMsg msg)
         {
@@ -58,31 +58,31 @@ namespace SmashDomeNetwork
             byte[] body = BuildMSG(msg.from, msg.to, msg.positions,
                                     msg.rotation,
                                     msg.camRotation);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(StructureChangeMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.pos, msg.vertices, msg.triangles);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(AddPlayerMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.playerType);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(TestMsg msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.stuff);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
         public byte[] SerializeMSG(BigTest msg)
         {
             byte[] header = Header(msg.msgType);
             byte[] body = BuildMSG(msg.userId, msg.positions, msg.rotation);
-            return Combine(IntByte((Int64)8 + header.Length + body.Length), header, body);
+            return Combine(IntByte((Int32)4 + header.Length + body.Length), header, body);
         }
 
         // Construction Processing Functions ///////////
@@ -169,7 +169,7 @@ namespace SmashDomeNetwork
         // Deserialization Functions
         public Message DeserializeMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetMSG(msg, msgSize);
@@ -179,7 +179,7 @@ namespace SmashDomeNetwork
         }
         public MoveMsg DeserializeMMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetMMSG(msg, msgSize);
@@ -188,7 +188,7 @@ namespace SmashDomeNetwork
         }
         public MoveVRMsg DeserializeMVRMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetMVRMSG(msg, msgSize);
@@ -197,7 +197,7 @@ namespace SmashDomeNetwork
         }
         public LoginMsg DeserializeLiMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetLiMSG(msg, msgSize);
@@ -206,7 +206,7 @@ namespace SmashDomeNetwork
         }
         public LogoutMsg DeserializeLoMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetLoMSG(msg, msgSize);
@@ -215,7 +215,7 @@ namespace SmashDomeNetwork
         }
         public ShootMsg DeserializeSMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetSMSG(msg, msgSize);
@@ -224,7 +224,7 @@ namespace SmashDomeNetwork
         }
         public SnapshotMsg DeserializeSsMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetSsMSG(msg, msgSize);
@@ -233,7 +233,7 @@ namespace SmashDomeNetwork
         }
         public StructureChangeMsg DeserializeSCMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetSCMSG(msg, msgSize);
@@ -242,7 +242,7 @@ namespace SmashDomeNetwork
         }
         public AddPlayerMsg DeserializeAPMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetAPMSG(msg, msgSize);
@@ -251,7 +251,7 @@ namespace SmashDomeNetwork
         }
         public TestMsg DeserializeTMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetTMSG(msg, msgSize);
@@ -260,7 +260,7 @@ namespace SmashDomeNetwork
         }
         public BigTest DeserializeBTMSG(byte[] msg)
         {
-            Int64 msgSize = checkMSG(msg);
+            Int32 msgSize = checkMSG(msg);
             if (msgSize != 0)
             {
                 return GetBTMSG(msg, msgSize);
@@ -268,7 +268,7 @@ namespace SmashDomeNetwork
             return null;
         }
         // Deconstruction Processing Functions
-        private Message GetMSG(byte[] msg, Int64 msgSize)
+        private Message GetMSG(byte[] msg, Int32 msgSize)
         {
             //Console.WriteLine(msgSize);
             Int32 type = ByteInt32(msg[8]);
@@ -301,7 +301,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Move MSG
-        private MoveMsg GetMMSG(byte[] msg, Int64 msgSize)
+        private MoveMsg GetMMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -339,7 +339,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Login MSG
-        private LoginMsg GetLiMSG(byte[] msg, Int64 msgSize)
+        private LoginMsg GetLiMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -359,7 +359,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Logout MSG
-        private LogoutMsg GetLoMSG(byte[] msg, Int64 msgSize)
+        private LogoutMsg GetLoMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -378,7 +378,7 @@ namespace SmashDomeNetwork
 
             return msg;
         }
-        private MoveVRMsg GetMVRMSG(byte[] msg, Int64 msgSize)
+        private MoveVRMsg GetMVRMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -398,7 +398,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Shoot MSG
-        private ShootMsg GetSMSG(byte[] msg, Int64 msgSize)
+        private ShootMsg GetSMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -418,7 +418,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Snapshot MSG
-        private SnapshotMsg GetSsMSG(byte[] msg, Int64 msgSize)
+        private SnapshotMsg GetSsMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -453,9 +453,9 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Structure Change MSG
-        private StructureChangeMsg GetSCMSG(byte[] msg, Int64 msgSize)
+        private StructureChangeMsg GetSCMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
             byte[] vars = new byte[msgSize - 13];
 
@@ -514,7 +514,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Add Player MSG
-        private AddPlayerMsg GetAPMSG(byte[] msg, Int64 msgSize)
+        private AddPlayerMsg GetAPMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -534,7 +534,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Test MSG
-        private TestMsg GetTMSG(byte[] msg, Int64 msgSize)
+        private TestMsg GetTMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -562,7 +562,7 @@ namespace SmashDomeNetwork
             return msg;
         }
         // Big Test MSG
-        private BigTest GetBTMSG(byte[] msg, Int64 msgSize)
+        private BigTest GetBTMSG(byte[] msg, Int32 msgSize)
         {
             Int32 type = ByteInt32(msg[8]);
             byte[] seq_num = new byte[4];
@@ -598,11 +598,11 @@ namespace SmashDomeNetwork
         }
 
         // Check Message For Correct Length
-        private Int64 checkMSG(byte[] msg)
+        private Int32 checkMSG(byte[] msg)
         {
-            byte[] size = new byte[8];
-            Array.Copy(msg, 0, size, 0, 8);
-            Int64 msgSize = ByteInt64(size);
+            byte[] size = new byte[4];
+            Array.Copy(msg, 0, size, 0, 4);
+            Int32 msgSize = ByteInt32(size);
             if (msg.Length == msgSize)
                 return msgSize;
             else

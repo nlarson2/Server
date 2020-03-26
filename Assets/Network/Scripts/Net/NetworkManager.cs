@@ -183,7 +183,8 @@ namespace SmashDomeNetwork
                     newMsg = server.msgQueue.Dequeue();
                     try
                     {
-                        msg = cc.DeserializeMSG(newMsg);
+                        
+                        //msg = cc.DeserializeMSG(newMsg);
                     }
                     catch (ArgumentException e) //used to test what errors occur with Json messaging
                     {
@@ -191,7 +192,8 @@ namespace SmashDomeNetwork
                         Debug.Log(newMsg);
                         continue;
                     }
-                    switch((MsgType)msg.msgType)
+                    int type = cc.ByteInt32(newMsg[4]);
+                    switch((MsgType)type)
                     {
                         case MsgType.LOGIN:
                             Login(newMsg);

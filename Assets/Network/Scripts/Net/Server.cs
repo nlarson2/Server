@@ -100,26 +100,32 @@ namespace SmashDomeNetwork
                 {
                     while (true)
                     {
-                        buffer = new byte[8];
-                        //reads first 8 bytes
-                        for (int i = 0; i < 8; i++)
-                        {
-                            buffer[i] = (byte)(char)stream.ReadByte();
-                        }
-                        //saves 8 bytes into Int64/long
-                        Int64 msgSize = cc.ByteInt64(buffer);
-                        //creates buffer with msg size minus 8 bytes which we add later
-                        buffer = new byte[msgSize - 8];
+                        int res = 0; int index = 0;
+                        buffer = new byte[4];
 
-                        //this adds the first 8 bytes into the buffer at the beginning
-                        buffer = Cerealize.Combine(cc.IntByte(msgSize), buffer);
-
-                        //this reads the rest of the message into new buffer
-                        for (int j = 8; j < msgSize; j++)
+                        while (index != 4)
                         {
-                            buffer[j] = (byte)(char)stream.ReadByte();
+                            res = stream.ReadByte();
+                            if (res >= 0)
+                            {
+                                buffer[index++] = (byte)(char)res;
+                            }
                         }
-                        message = buffer;
+
+                        Int32 msgSize = cc.ByteInt32(buffer);
+
+                        message = new byte[msgSize];
+                        Array.Copy(buffer, 0, message, 0, 4);
+
+                        index = 4; res = 0;
+                        while (index != msgSize && msgSize > 0)
+                        {
+                            res = stream.ReadByte();
+                            if (res >= 0)
+                            {
+                                message[index++] = (byte)(char)res;
+                            }
+                        }
                         break;
                     }
                     msgQueue.Enqueue(message);
