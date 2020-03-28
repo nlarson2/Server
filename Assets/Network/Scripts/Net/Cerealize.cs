@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace SmashDomeNetwork
-{ 
+{
     public class Cerealize
     {
         public int[] sequence = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -97,18 +97,8 @@ namespace SmashDomeNetwork
         }
         private byte[] Sequence(Int32 msgType)
         {
-            return IntByte(sequence[msgType++]);
+            return IntByte(sequence[msgType]++);
         }
-        //private byte[] BuildMSG(float pos, String word, Char letter)
-        //{
-        //    Int32 posi = (Int32)(pos * 1000);
-
-        //    byte[] posb = BitConverter.GetBytes(posi);
-        //    byte[] wordb = Encoding.ASCII.GetBytes(word);
-        //    byte letterb = (byte)letter;
-
-        //    return Combine(Combine(posb, wordb), letterb);
-        //}
         private byte[] BuildMSG(Int32 from, Int32 to)
         {
             byte[] fromB = IntByte(from);
@@ -146,6 +136,9 @@ namespace SmashDomeNetwork
             byte[] posB = Combine(FByte(pos.x), FByte(pos.y), FByte(pos.x));
             byte[] verticiesB = Vec3Byte(vertices);
             byte[] trianglesB = IntByte(triangles);
+            Debug.Log("Build Object: Verts, Tris");
+            Debug.Log(verticiesB.Length);
+            Debug.Log(trianglesB.Length);
             byte[] body = Combine(posB,
                                   IntByte((Int32)verticiesB.Length),
                                   verticiesB,
@@ -271,12 +264,12 @@ namespace SmashDomeNetwork
         private Message GetMSG(byte[] msg, Int32 msgSize)
         {
             //Console.WriteLine(msgSize);
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             Message MSG = MSGVars(vars);
             MSG.msgType = type;
@@ -303,12 +296,12 @@ namespace SmashDomeNetwork
         // Move MSG
         private MoveMsg GetMMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             MoveMsg MMSG = MMSGVars(vars);
             MMSG.msgType = type;
@@ -323,6 +316,8 @@ namespace SmashDomeNetwork
 
             int index = 0;
             //Console.WriteLine(vars.Length);
+            Debug.Log("Should be 52: ");
+            Debug.Log(vars.Length);
             Array.Copy(vars, index, from, 0, 4);
             index += 4;
             Array.Copy(vars, index, pos, 0, 12);
@@ -341,12 +336,12 @@ namespace SmashDomeNetwork
         // Login MSG
         private LoginMsg GetLiMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             LoginMsg LiMSG = LiMSGVars(vars);
             LiMSG.msgType = type;
@@ -361,12 +356,12 @@ namespace SmashDomeNetwork
         // Logout MSG
         private LogoutMsg GetLoMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             LogoutMsg LoMSG = LoMSGVars(vars);
             LoMSG.msgType = type;
@@ -380,12 +375,12 @@ namespace SmashDomeNetwork
         }
         private MoveVRMsg GetMVRMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             MoveVRMsg MVRMSG = MVRMSGVars(vars);
             MVRMSG.msgType = type;
@@ -400,12 +395,12 @@ namespace SmashDomeNetwork
         // Shoot MSG
         private ShootMsg GetSMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             ShootMsg SMSG = SMSGVars(vars);
             SMSG.msgType = type;
@@ -420,12 +415,12 @@ namespace SmashDomeNetwork
         // Snapshot MSG
         private SnapshotMsg GetSsMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             SnapshotMsg SsMSG = SsMSGVars(vars);
             SsMSG.msgType = type;
@@ -457,10 +452,10 @@ namespace SmashDomeNetwork
         {
             Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             StructureChangeMsg SCMSG = SCMSGVars(vars);
             SCMSG.msgType = type;
@@ -501,27 +496,19 @@ namespace SmashDomeNetwork
 
             msg.vertices = ByteVec3Array(vertices);
 
+            msg.triangles = ByteInt32Array(triangles);
 
-            byte[][] tri = new byte[vars.Length / 4][];
-
-            //Console.WriteLine(vars.Length);
-            for (int i = 0; i < vars.Length / 4; i += 4)
-            {
-                Array.Copy(vars, i, tri[i], 0, 4);
-            }
-
-            msg.triangles = ByteInt32(tri);
             return msg;
         }
         // Add Player MSG
         private AddPlayerMsg GetAPMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             AddPlayerMsg APMSG = APMSGVars(vars);
             APMSG.msgType = type;
@@ -536,12 +523,12 @@ namespace SmashDomeNetwork
         // Test MSG
         private TestMsg GetTMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             TestMsg TMSG = TMSGVars(vars);
             TMSG.msgType = type;
@@ -564,12 +551,12 @@ namespace SmashDomeNetwork
         // Big Test MSG
         private BigTest GetBTMSG(byte[] msg, Int32 msgSize)
         {
-            Int32 type = ByteInt32(msg[8]);
+            Int32 type = ByteInt32(msg[4]);
             byte[] seq_num = new byte[4];
-            byte[] vars = new byte[msgSize - 13];
+            byte[] vars = new byte[msgSize - 9];
 
-            Array.Copy(msg, 9, seq_num, 0, 4);
-            Array.Copy(msg, 13, vars, 0, msgSize - 13);
+            Array.Copy(msg, 5, seq_num, 0, 4);
+            Array.Copy(msg, 9, vars, 0, msgSize - 9);
 
             BigTest BTMSG = BTMSGVars(vars);
             BTMSG.msgType = type;
@@ -713,12 +700,12 @@ namespace SmashDomeNetwork
         }
         public byte[] IntByte(Int32[] num)
         {
-            byte[] numB = new byte[num.Length];
-            for (int i = 0; i < numB.Length; i += 4)
+            byte[] numB = new byte[1];
+            numB = IntByte(num[0]);
+            for (int i = 1; i < num.Length; i++)
             {
-                numB = Combine(numB, IntByte(num.Range(i, i + 3)));
+                numB = Combine(numB, IntByte(num[i]));
             }
-
             return numB;
         }
         public byte[] IntByte(List<Int32> num)
@@ -754,12 +741,15 @@ namespace SmashDomeNetwork
         }
         public byte[] Vec3Byte(Vector3[] vec)
         {
-            byte[] vecB = new byte[vec.Length * 12];
-            for (int index = 0; index < vecB.Length; index++)
+            byte[] vecB = Combine(FByte(vec[0].x),
+                                  FByte(vec[0].y),
+                                  FByte(vec[0].z));
+
+            for (int index = 1; index < vec.Length; index++)
             {
-                vecB = Combine(FByte(vec[index].x),
-                               FByte(vec[index].y),
-                               FByte(vec[index].z));
+                vecB = Combine(vecB, Combine(FByte(vec[index].x),
+                                             FByte(vec[index].y),
+                                             FByte(vec[index].z)));
             }
             return vecB;
         }
@@ -816,6 +806,17 @@ namespace SmashDomeNetwork
 
             return Int32Array;
         }
+        public Int32[] ByteInt32Array(byte[] bite)
+        {
+            Int32[] ByteInt32Array = new int[bite.Length / 4];
+            int index = 0;
+
+            for (int i = 0; i < bite.Length; i += 4)
+            {
+                ByteInt32Array[index++] = ByteInt32(bite.Range(i, i + 3));
+            }
+            return ByteInt32Array;
+        }
         public Int64 ByteInt64(byte[] bite)
         {
             return BitConverter.ToInt64(bite, 0);
@@ -846,18 +847,18 @@ namespace SmashDomeNetwork
             int vecIndex = 0;
             for (int index = 0; index < bite.Length; index += 12)
             {
-                Vec3Array[vecIndex] = new Vector3(ByteFloat(Combine(bite[index + 3],
-                                                                    bite[index + 2],
+                Vec3Array[vecIndex++] = new Vector3(ByteFloat(Combine(bite[index],
                                                                     bite[index + 1],
-                                                                    bite[index])),
-                                                  ByteFloat(Combine(bite[index + 7],
-                                                                    bite[index + 6],
+                                                                    bite[index + 2],
+                                                                    bite[index + 3])),
+                                                  ByteFloat(Combine(bite[index + 4],
                                                                     bite[index + 5],
-                                                                    bite[index + 4])),
-                                                  ByteFloat(Combine(bite[index + 11],
-                                                                    bite[index + 10],
+                                                                    bite[index + 6],
+                                                                    bite[index + 7])),
+                                                  ByteFloat(Combine(bite[index + 8],
                                                                     bite[index + 9],
-                                                                    bite[index + 8])));
+                                                                    bite[index + 10],
+                                                                    bite[index + 11])));
             }
 
             return Vec3Array;

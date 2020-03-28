@@ -71,8 +71,10 @@ namespace SmashDomeNetwork
                     connectionCount++;
 
                     //This is where the login notification will go*******************************
-                    LoginMsg msg = new LoginMsg((byte)clientData.id);
-                    byte[] message = msg.GetMessage();
+                    //LoginMsg msg = new LoginMsg((byte)clientData.id);
+                    LoginMsg msg = new LoginMsg(clientData.id);
+                    //byte[] message = msg.GetMessage();
+                    byte[] message = cc.SerializeMSG(msg);
                     stream.Write(message, 0, message.Length);
 
                     threads.Add( new Thread(() => ReceiveMsg(clientData)));
@@ -98,6 +100,7 @@ namespace SmashDomeNetwork
             {
                 try
                 {
+                    message = new byte[1];
                     while (true)
                     {
                         int res = 0; int index = 0;
@@ -109,6 +112,7 @@ namespace SmashDomeNetwork
                             if (res >= 0)
                             {
                                 buffer[index++] = (byte)(char)res;
+                                //Debug.Log((char)res);
                             }
                         }
 
@@ -124,13 +128,16 @@ namespace SmashDomeNetwork
                             if (res >= 0)
                             {
                                 message[index++] = (byte)(char)res;
+                                //Debug.Log((char)res);
                             }
                         }
+                        Debug.Log("ReceiveMsg: ");
+                        Debug.Log(cc.ByteInt32(message[4]));
                         break;
                     }
                     msgQueue.Enqueue(message);
                     //Debug.Log(message);
-                }
+                }   
                 catch (SocketException e)
                 {
                     Debug.Log(e);
@@ -142,6 +149,9 @@ namespace SmashDomeNetwork
         // Send message to single client
         public void SendMsg(ClientData client, byte[] msg)
         {
+            Debug.Log("In SendMsg:");
+            Debug.Log(cc.ByteInt32(msg[4]));
+
             try
             {
                 client.stream.Write(msg, 0, msg.Length);
@@ -155,6 +165,8 @@ namespace SmashDomeNetwork
         // Used for broadcasting messages regarding clients in their respective Quadrants (for future use)
         public void SendMsg(ClientData[] client, byte[] msg)
         {
+            Debug.Log("In SendMsg []:");
+            Debug.Log(cc.ByteInt32(msg[4]));
             try
             {
                 foreach (ClientData c in client)

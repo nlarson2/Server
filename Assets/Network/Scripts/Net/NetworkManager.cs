@@ -97,16 +97,27 @@ namespace SmashDomeNetwork
                     Debug.Log("ADD USER SENT");
                     addPlayerMsg.from = player.clientData.id;
                     addPlayerMsg.to = playerData.Value.clientData.id;
-                    Send((Message)addPlayerMsg);
+                    byte[] msg = cc.SerializeMSG(addPlayerMsg);
+                    //Send((Message)addPlayerMsg);
+                    Send(msg, addPlayerMsg.to);
 
                     addPlayerMsg.from = playerData.Value.clientData.id;
                     addPlayerMsg.to = player.clientData.id;
-                    Send((Message)addPlayerMsg);
+                    msg = cc.SerializeMSG(addPlayerMsg);
+                    //Send((Message)addPlayerMsg);
+                    Send(msg, addPlayerMsg.to);
                 }
                 foreach (StructureChangeMsg structMsg in structures)
                 {
                     structMsg.to = player.clientData.id;
-                    Send(structMsg);
+
+                    byte[] MSG = cc.SerializeMSG(structMsg);
+
+                    Debug.Log("StructMsg.vertices + triangles");
+                    Debug.Log(structMsg.vertices.Length);
+                    Debug.Log(structMsg.triangles.Length);
+
+                    Send(MSG, structMsg.to);
                 }
             }
 
@@ -127,7 +138,9 @@ namespace SmashDomeNetwork
                         if (playerData.Value.clientData.id == player)
                             continue;
                         logoutMsg.to = playerData.Value.clientData.id;
-                        Send((Message)logoutMsg);
+                        byte[] msg = cc.SerializeMSG(logoutMsg);
+                        //Send((Message)logoutMsg);
+                        Send(msg, logoutMsg.to);
                     }
                 }
                 catch (Exception e)
@@ -181,6 +194,9 @@ namespace SmashDomeNetwork
                 while (server.msgQueue.Count > 0)
                 {
                     newMsg = server.msgQueue.Dequeue();
+
+                    Debug.Log("msgType: ");
+                    Debug.Log(cc.ByteInt32(newMsg[4]));
                     try
                     {
                         
@@ -259,7 +275,10 @@ namespace SmashDomeNetwork
                 if (player.clientData.id == moveMsg.from)
                     continue;
                 moveMsg.to = player.clientData.id;
-                Send(moveMsg);
+
+                byte[] MSG = cc.SerializeMSG(moveMsg);
+
+                Send(MSG, moveMsg.to);
                 
             }
                                     
@@ -278,7 +297,10 @@ namespace SmashDomeNetwork
                     try
                     {
                         shoot.to = playerData.clientData.id;
-                        Send(shoot);
+                        
+                        byte[] MSG = cc.SerializeMSG(shoot);
+
+                        Send(MSG, shoot.to);
                     }
                     catch(Exception e)
                     {
@@ -339,17 +361,17 @@ namespace SmashDomeNetwork
 
 
 
-        public void Send(Message msg)
+        public void Send(byte[] msg, int to)
         {
-            byte[] MSG = cc.SerializeMSG(msg);
-            ClientData cli = users[msg.to].clientData;
-            server.SendMsg(cli, MSG);
+            //byte[] MSG = cc.SerializeMSG(msg);
+            ClientData cli = users[to].clientData;
+            server.SendMsg(cli, msg);
         }
         public void Send(ClientData[] clients, Message msg)
         {
             byte[] MSG = cc.SerializeMSG(msg);
             server.SendMsg(clients, MSG);
-        }
+        } 
 
     }
 }

@@ -20,7 +20,7 @@ namespace SmashDomeNetwork
     }
     public class Message
     {
-
+        public Cerealize cc = new Cerealize();
         protected DateTime time = DateTime.Now;
         public int from;
         public int to;
@@ -35,10 +35,7 @@ namespace SmashDomeNetwork
 
         public byte[] GetMessage()
         {
-            string json = JsonUtility.ToJson(this);
-            Debug.Log(json);
-
-            return System.Text.ASCIIEncoding.ASCII.GetBytes(json);
+            return cc.SerializeMSG(this);
         }
     }
 
