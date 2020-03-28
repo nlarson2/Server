@@ -1,0 +1,103 @@
+﻿#pragma kernel GenMesh
+
+struct Pos
+{
+	int h;
+	int w;
+	int d;
+	int v;
+};
+struct MeshRange
+{
+	float3 begin;
+	float3 end;
+};
+struct Triangle
+{
+	float3 vert1;
+	float3 vert2;
+	float3 vert3;
+};
+
+RWStructuredBuffer<Pos> posBuffer;
+AppendStructuredBuffer<Triangle> triangles;
+StructuredBuffer<MeshRange> meshRanges;
+
+int dimensions;
+float cubeSize;
+float firstChange;
+
+
+int GetIndex(int x, int y, int z) 
+{
+	return x + (dimensions * (y + (dimensions * z)));
+}
+
+void CheckFaces(int index)
+{
+
+	int x = index / (dimensions * dimensions);
+	int y = (index / dimensions) % dimensions;
+	int z = index % dimensions;
+	if (z - 1 >= 0 && z + 1 < dimensions) {
+		int front = GetIndex(x, y, z-1);
+		if (posBuffer[front].v == 0) {
+			
+		}
+
+		int back = GetIndex(x, y, z+1);
+		if (posBuffer[back].v == 0) {
+			return;
+		}
+	}
+	else {
+		//Add front faces if they're below the bounds of our array
+		if (z - 1 < 0)
+			//addFace(front, arrayPos);
+		//Add front faces if they're above the bounds of our array
+		else if (z + 1 >= voxelArraySize)
+			//addFace(back, arrayPos);
+	}
+	if (x - 1 >= 0 && x + 1 < dimensions) {
+		int left = GetIndex(x - 1, y, z);
+		if (posBuffer[left].v == 0) {
+			return;
+		}
+
+		int right = GetIndex(x + 1, y, z);
+		if (posBuffer[right].v == 0) {
+			return;
+		}
+	}
+	if (y - 1 >= 0 && y + 1 < dimensions) {
+		int top = GetIndex(x, y - 1, z);
+		if (posBuffer[top].v == 0) {
+		}
+		int bottom = GetIndex(x , y + 1, z);
+		if (posBuffer[bottom].v == 0) {
+			
+		}
+	}
+	return true;
+}
+
+[numthreads(8,8,8)]
+void GenMesh (uint3 id : SV_DispatchThreadID)
+{
+
+	// Stop one point before the end because voxel includes neighbouring points
+	if (id.x >= dimensions || id.y >= dimensions || id.z >= dimensions) {
+		return;
+	}
+	firstChange = ((float)(pow(2, dimensions - 1)) - 0.5f) * cubeSize;
+	int index = GetIndex(id.x, id.y, id.z);
+	if(posBuffer[index].v > 0)
+		CheckFaces(index);
+
+	//use id below
+	//height/width/depth = dimensions;
+	//x + HEIGHT* (y + WIDTH* z) //formula to find index
+	/*int x = index / (dimensions * dimensions);
+	int y = (index / dimensions) % dimensions;
+	int z = index % dimensions;*/
+}

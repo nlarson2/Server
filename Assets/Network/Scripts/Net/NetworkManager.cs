@@ -87,7 +87,7 @@ namespace SmashDomeNetwork
                 player.obj.name = "NET_PLAYER_" + player.clientData.id;
                 AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id);
                 KeyValuePair<int, PlayerData>[] players = users.ToArray();
-                Debug.Log(players.Length);
+                Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
                 foreach (KeyValuePair<int,PlayerData> playerData in players)
                 {
                     if (playerData.Value.clientData.id == player.clientData.id)
@@ -95,15 +95,16 @@ namespace SmashDomeNetwork
                     Debug.Log("ADD USER SENT");
                     addPlayerMsg.from = player.clientData.id;
                     addPlayerMsg.to = playerData.Value.clientData.id;
-                    Send(addPlayerMsg);
+                    Send(addPlayerMsg.GetBytes(), addPlayerMsg.to);
                     addPlayerMsg.from = playerData.Value.clientData.id;
                     addPlayerMsg.to = player.clientData.id;
-                    Send(addPlayerMsg);
+                    Send(addPlayerMsg.GetBytes(), addPlayerMsg.to);
                 }
                 foreach (StructureChangeMsg structMsg in structures)
                 {
                     structMsg.to = player.clientData.id;
-                    Send(structMsg);
+                    Debug.Log(String.Format("STRUCT SENT TO: {0}", structMsg.to));
+                    Send(structMsg.GetBytes(), structMsg.to);
                 }
             }
 
@@ -124,7 +125,7 @@ namespace SmashDomeNetwork
                         if (playerData.Value.clientData.id == player)
                             continue;
                         logoutMsg.to = playerData.Value.clientData.id;
-                        Send(logoutMsg);
+                        Send(logoutMsg.GetBytes(), logoutMsg.to);
                     }
                 }
                 catch (Exception e)
@@ -170,25 +171,17 @@ namespace SmashDomeNetwork
         //thread continuely runs trying to pull messages form the server
         public void ReceiveMessages()
         {
-            string newMsg;
-            Message msg;
+            byte[] newMsg;
+           // Message msg;
             while (true)
             {
-                newMsg = string.Empty;
+                newMsg = null;
                 while (server.msgQueue.Count > 0)
                 {
                     newMsg = server.msgQueue.Dequeue();
-                    try
-                    {
-                        msg = JsonUtility.FromJson<Message>(newMsg);
-                    }
-                    catch (ArgumentException e) //used to test what errors occur with Json messaging
-                    {
-                        Debug.Log(e);
-                        Debug.Log(newMsg);
-                        continue;
-                    }
-                    switch((MsgType)msg.msgType)
+                    
+                    int msgType = Message.BytesToInt(Message.GetSegment(4, 4, newMsg));
+                    switch ((MsgType)msgType)
                     {
                         case MsgType.LOGIN:
                             Login(newMsg);
@@ -225,45 +218,66 @@ namespace SmashDomeNetwork
             }
         }
 
-        private void Login(string msg)
+        private void Login(byte[] msg)
         {
             //pull new player off connectingUsers on the server and instantiate them into the game
-            LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
+            //LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
+            LoginMsg loginMsg = new LoginMsg(msg);
             ClientData clientData = server.connecting[loginMsg.from];
             server.connecting.Remove(loginMsg.from);
             instantiatePlayerQ.Enqueue(clientData);
             
 
         }
-        private void Logout(string msg)
+        private void Logout(byte[] msg)
         {
-            LogoutMsg logout = JsonUtility.FromJson<LogoutMsg>(msg);
+            //LogoutMsg logout = JsonUtility.FromJson<LogoutMsg>(msg);
+            LogoutMsg logout = new LogoutMsg(msg);
             removePlayerQ.Enqueue(logout.from);
         }
-        private void Move(string msg)
+        private void Move(byte[] msg)
         {
-            MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
+            // MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
+            MoveMsg moveMsg = new MoveMsg(msg);
             Player playerController = users[moveMsg.from].playerControl;
             playerController.position = moveMsg.pos;
             playerController.rotation = moveMsg.playerRotation;
             playerController.cameratRotation = moveMsg.cameraRotation;
 
-            foreach (PlayerData player in users.Values)
+            /*foreach (PlayerData player in users.Values)
             {
                 if (player.clientData.id == moveMsg.from)
                     continue;
                 moveMsg.to = player.clientData.id;
-                Send(moveMsg);
+                Debug.Log("MOVEMENT");
+                Send(moveMsg.GetBytes(), moveMsg.to);
+                
+            }*/
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+            int countTest = 0;
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            {
+                /*if (playerData.Value.clientData.id == moveMsg.from)
+                {
+                    print(String.Format("TEST {0}",countTest));
+                    countTest++;
+                    continue;
+                }*/
+                Debug.Log("Movement");
+                moveMsg.to = playerData.Value.clientData.id;
+                Send(msg, playerData.Value.clientData.id);
                 
             }
-                                    
+
 
 
 
         }
-        private void Shoot(string msg)
+        private void Shoot(byte[] msg)
         {
-            ShootMsg shoot = JsonUtility.FromJson<ShootMsg>(msg);
+            //ShootMsg shoot = JsonUtility.FromJson<ShootMsg>(msg);
+            ShootMsg shoot = new ShootMsg(msg);
             bulletQ.Enqueue(shoot);
             foreach(PlayerData playerData in users.Values)
             {
@@ -272,7 +286,7 @@ namespace SmashDomeNetwork
                     try
                     {
                         shoot.to = playerData.clientData.id;
-                        Send(shoot);
+                        Send(shoot.GetBytes(), shoot.to);
                     }
                     catch(Exception e)
                     {
@@ -318,7 +332,7 @@ namespace SmashDomeNetwork
                             clients.Add(playerData.clientData);
                         }
 
-                        Send(clients.ToArray(), snapshot);
+                        //Send(clients.ToArray(), snapshot);
                         time = 0;
                     }
                     prevTime = DateTime.Now;
@@ -331,18 +345,23 @@ namespace SmashDomeNetwork
 
 
 
-
-
-        public void Send(Message msg)
+        public void print(string output)
         {
-            byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
-            ClientData cli = users[msg.to].clientData;
-            server.SendMsg(cli, json);
+            
+            Debug.Log(String.Format(output));
+        
         }
-        public void Send(ClientData[] clients, Message msg)
+
+        public void Send(byte[] msg, int to)
         {
-            byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
-            server.SendMsg(clients, json);
+            //byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
+            ClientData cli = users[to].clientData;
+            server.SendMsg(cli, msg);
+        }
+        public void Send(ClientData[] clients, byte[] msg)
+        {
+           // byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
+            server.SendMsg(clients, msg);
         }
 
     }

@@ -585,8 +585,8 @@ namespace SmashDomeVoxel
 
                 StructureChangeMsg outMsg = new StructureChangeMsg();
                 outMsg.pos = transform.position;
-                outMsg.vertices = mesh.vertices;
-                outMsg.triangles = mesh.triangles;
+                outMsg.Vertices = mesh.vertices;
+                outMsg.Triangles = mesh.triangles;
                 netManager.structures.Add(outMsg);
                 hasran = true;
 

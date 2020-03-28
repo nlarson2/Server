@@ -18,13 +18,17 @@ namespace SmashDomeNetwork
         STRUCTURE = 7,
         ADDPLAYER = 8
     }
+
     public class Message
     {
 
-        protected DateTime time = DateTime.Now;
-        public int from;
-        public int to;
-        public int msgType;
+        //protected DateTime time = DateTime.Now;
+        public static int seq = 1;
+        //default to 0 to avoid errors
+        public int msgNum = 0;
+        public int msgType = 0;
+        public int from = 0;
+        public int to = 0;
         //protected byte[] msg; // used later when we move from json
         char delimiter = '\0';
 
@@ -33,13 +37,166 @@ namespace SmashDomeNetwork
             return null;
         }
 
-        public byte[] GetMessage()
+        public virtual byte[] GetMessage()
         {
             string json = JsonUtility.ToJson(this);
             Debug.Log(json);
 
             return System.Text.ASCIIEncoding.ASCII.GetBytes(json);
         }
+
+        public static int GetMsgType(byte[] msgType)
+        {
+
+            return 0;
+        }
+
+        //get the normal first components(msgnum, msgtype, to, from)
+        public byte[] Base()
+        {
+            byte[] ret = IntToBytes(msgNum);
+            ret = Join(ret, IntToBytes(msgType));
+            ret = Join(ret, IntToBytes(to));
+            ret = Join(ret, IntToBytes(from));
+            return ret;
+        }
+
+        // used to append the size of the message to the front of the msg
+        public byte[] FinishMsg(byte[] bytes)
+        {
+            /*int size = bytes.Length;
+            Debug.Log(size);
+            byte[] test = IntToBytes(size);
+            Debug.Log(String.Format("CONVERSION TEST: {0}",BytesToInt(test)));*/
+            //return Join(IntToBytes(size), bytes);
+            byte[] delim = { (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n' };
+            return Join(bytes, delim);
+        }
+
+        /***************CONVERSIONS*************/
+        public static byte[] IntToBytes(int num)
+        {
+            byte[] bytes = BitConverter.GetBytes(num);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(bytes);
+            return bytes;
+        }
+
+        public static int BytesToInt(byte[] bytes)
+        {
+            //Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        public static byte[] FloatToBytes(float num)
+        {
+            num = num * 10;
+            byte[] bytes = BitConverter.GetBytes((int)num);
+            /*if (BitConverter.IsLittleEndian)
+                Array.Reverse(bytes);*/
+            return bytes;
+        }
+
+        public static float BytesToFloat(byte[] bytes)
+        {
+            //Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
+            float num = BitConverter.ToInt32(bytes, 0);
+            return num / 10.0f;
+        }
+
+        public static byte[] Vec3ToBytes(UnityEngine.Vector3 vec)
+        {
+            byte[] bytes = new byte[12];
+            float[] floatsOfVec = { vec.x, vec.y, vec.z };
+            for (int i = 0; i < 3; i++)
+            {
+                byte[] tmp = FloatToBytes(floatsOfVec[i]);
+                bytes[i * 4] = tmp[0];
+                bytes[i * 4 + 1] = tmp[1];
+                bytes[i * 4 + 2] = tmp[2];
+                bytes[i * 4 + 3] = tmp[3];
+            }
+
+            return bytes;
+        }
+
+        public static Vector3 BytesToVec3(byte[] bytes)
+        {
+            byte[] tmp = new byte[4];
+            float[] floats = new float[3];
+            for (int i = 0; i < 3; i++)
+            {
+                tmp[0] = bytes[i * 4];
+                tmp[1] = bytes[i * 4 + 1];
+                tmp[2] = bytes[i * 4 + 2];
+                tmp[3] = bytes[i * 4 + 3];
+                floats[i] = BytesToFloat(tmp);
+            }
+            return new Vector3(floats[0], floats[1], floats[2]);
+        }
+
+        public static byte[] QuaternionToBytes(UnityEngine.Quaternion vec)
+        {
+            //byte[] bytes = new byte[12];
+            //Debug.Log(vec);
+            //float[] floatsOfVec = { vec.x, vec.y, vec.z, vec.w };
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    byte[] tmp = FloatToBytes(floatsOfVec[i]);
+            //    bytes[i * 4] = tmp[0];
+            //    bytes[i * 4 + 1] = tmp[1];
+            //    bytes[i * 4 + 2] = tmp[2];
+            //    bytes[i * 4 + 3] = tmp[3];
+            //}
+                
+            byte[] bytes = Vec3ToBytes(vec.eulerAngles);
+
+            return bytes;
+        }
+
+        public static Quaternion BytesToQuaternion(byte[] bytes)
+        {
+            //byte[] tmp = new byte[4];
+            //float[] floats = new float[4];
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    tmp[0] = bytes[i * 4];
+            //    tmp[1] = bytes[i * 4 + 1];
+            //    tmp[2] = bytes[i * 4 + 2];
+            //    tmp[3] = bytes[i * 4 + 3];
+            //    floats[i] = BytesToFloat(tmp);
+            //}
+
+            //Debug.Log(new Quaternion(floats[0], floats[1], floats[2], floats[3]));
+            //return new Quaternion(floats[0], floats[1], floats[2], floats[3]);
+            Quaternion tmp = Quaternion.Euler(BytesToVec3(bytes));
+            //Debug.Log(sizeof(tmp));
+            return Quaternion.Euler(BytesToVec3(bytes));
+
+        }
+
+
+        /*******byte manipulation********/
+        public static byte[] GetSegment(int start, int count, byte[] bytes)
+        {
+            byte[] ret = new byte[count];
+            for (int i = 0; i < count; i++)
+            {
+                ret[i] = bytes[start + i];
+            }
+            return ret;
+        }
+        public static byte[] Join(byte[] a, byte[] b)
+        {
+            int size = a.Length + b.Length;
+            byte[] ret = new byte[size];
+            for (int i = 0; i < size; i++)
+            {
+                ret[i] = (i < a.Length) ? a[i] : b[i - a.Length];
+            }
+            return ret;
+        }
+
     }
 
     public class LoginMsg : Message
@@ -47,8 +204,25 @@ namespace SmashDomeNetwork
         //constructor
         public LoginMsg(int from)
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 1;
             this.from = from;
+        }
+        public LoginMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = FinishMsg(msg);
+            return msg;
         }
 
     }
@@ -56,9 +230,25 @@ namespace SmashDomeNetwork
     {
         public LogoutMsg(int from)
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 2;
             this.from = from;
 
+        }
+        public LogoutMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = FinishMsg(msg);
+            return msg;
         }
 
     }
@@ -70,8 +260,35 @@ namespace SmashDomeNetwork
 
         public MoveMsg(int from)
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 3;
             this.from = from;
+        }
+        public MoveMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.pos = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+            /*this.playerRotation = BytesToQuaternion(GetSegment(index, 16, bytes)); index += 16;//16 bytes (4 floats)
+            this.cameraRotation = BytesToQuaternion(GetSegment(index, 16, bytes)); index += 16;*/
+            this.playerRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
+            this.cameraRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, Vec3ToBytes(this.pos));
+            /*msg = Join(msg, QuaternionToBytes(this.playerRotation));
+            msg = Join(msg, QuaternionToBytes(this.cameraRotation));*/
+            msg = Join(msg, Vec3ToBytes(this.playerRotation.eulerAngles));
+            msg = Join(msg, Vec3ToBytes(this.cameraRotation.eulerAngles));
+            msg = FinishMsg(msg);
+            Debug.Log("GOT MOVE BYTES");
+            return msg;
         }
 
     }
@@ -92,8 +309,29 @@ namespace SmashDomeNetwork
         public Vector3 direction;
         public ShootMsg(int from)
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 5;
             this.from = from;
+        }
+        public ShootMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.position = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+            this.direction = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, Vec3ToBytes(this.position));
+            msg = Join(msg, Vec3ToBytes(this.direction));
+            msg = FinishMsg(msg);
+            return msg;
         }
 
 
@@ -113,11 +351,79 @@ namespace SmashDomeNetwork
     public class StructureChangeMsg : Message
     {
         public Vector3 pos;
-        public Vector3[] vertices;// = new List<Vector3>();
-        public int[] triangles;// = new List<Vector3>();
+        public int verticeLength = 0;
+        //using setter and getter to auto set length
+        protected Vector3[] vertices;
+        public Vector3[] Vertices
+        {
+            get
+            {
+                return this.vertices;
+            }
+            set
+            {
+                vertices = value;
+                verticeLength = vertices.Length;
+            }
+        }
+        public int triangleLength = 0;
+        //using setter and getter to auto set length
+        protected int[] triangles;
+        public int[] Triangles
+        {
+            get
+            {
+                return triangles;
+            }
+            set
+            {
+                triangles = value;
+                triangleLength = triangles.Length;
+            }
+        }
         public StructureChangeMsg()
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 7;
+        }
+        public StructureChangeMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.pos = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;
+            this.verticeLength = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.vertices = new Vector3[this.verticeLength];
+            for (int i = 0; i < this.verticeLength; i++)
+            {
+                this.vertices[i] = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;
+            }
+            this.triangleLength = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.triangles = new int[this.triangleLength];
+            for (int i = 0; i < this.triangleLength; i++)
+            {
+                this.triangles[i] = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            }
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, Vec3ToBytes(this.pos));
+            msg = Join(msg, IntToBytes(this.verticeLength));
+            for (int i = 0; i < this.verticeLength; i++)
+            {
+                msg = Join(msg, Vec3ToBytes(this.vertices[i]));
+            }
+            msg = Join(msg, IntToBytes(this.triangleLength));
+            for (int i = 0; i < this.triangleLength; i++)
+            {
+                msg = Join(msg, IntToBytes(this.triangles[i]));
+            }
+            msg = FinishMsg(msg);
+            return msg;
         }
 
     }
@@ -127,8 +433,27 @@ namespace SmashDomeNetwork
         public int playerType;
         public AddPlayerMsg(int from)
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 8;
             this.from = from;
+        }
+        public AddPlayerMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, IntToBytes(this.to));
+            msg = Join(msg, IntToBytes(this.from));
+            msg = FinishMsg(msg);
+            return msg;
         }
     }
 
@@ -142,7 +467,7 @@ namespace SmashDomeNetwork
 
         public void Setup()
         {
-            for(int i = 0; i < 50; i++)
+            for (int i = 0; i < 50; i++)
             {
                 stuff[i] = i;
             }
@@ -173,11 +498,11 @@ namespace SmashDomeNetwork
             userId.Add(3);
             positions.Add(new Vector3(3, 3, 3));
             rotation.Add(Quaternion.identity);
-            
+
         }
         public void print()
         {
-            for(int i = 0; i < userId.Count; i++)
+            for (int i = 0; i < userId.Count; i++)
             {
                 Debug.Log(userId[i]);
             }
