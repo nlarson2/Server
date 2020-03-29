@@ -279,20 +279,21 @@ namespace SmashDomeNetwork
             //ShootMsg shoot = JsonUtility.FromJson<ShootMsg>(msg);
             ShootMsg shoot = new ShootMsg(msg);
             bulletQ.Enqueue(shoot);
-            foreach(PlayerData playerData in users.Values)
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+            int countTest = 0;
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                if(playerData.clientData.id != shoot.from)
+                /*if (playerData.Value.clientData.id == moveMsg.from)
                 {
-                    try
-                    {
-                        shoot.to = playerData.clientData.id;
-                        Send(shoot.GetBytes(), shoot.to);
-                    }
-                    catch(Exception e)
-                    {
-                        //Debug.Log(e);
-                    }
-                }
+                    print(String.Format("TEST {0}",countTest));
+                    countTest++;
+                    continue;
+                }*/
+                Debug.Log("Movement");
+                shoot.to = playerData.Value.clientData.id;
+                Send(msg, playerData.Value.clientData.id);
+
             }
 
         }
