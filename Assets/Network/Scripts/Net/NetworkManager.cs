@@ -195,6 +195,7 @@ namespace SmashDomeNetwork
                             Move(newMsg);
                             break;
                         case MsgType.MOVEVR:
+                            Debug.Log("MOVEVR");
                             MoveVR(newMsg);
                             break;
                         case MsgType.SHOOT:
