@@ -85,7 +85,7 @@ namespace SmashDomeNetwork
                 player.playerControl = player.obj.GetComponent<Player>();
                 users.Add(player.clientData.id, player);
                 player.obj.name = "NET_PLAYER_" + player.clientData.id;
-                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id);
+                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType());
                 KeyValuePair<int, PlayerData>[] players = users.ToArray();
                 Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
                 foreach (KeyValuePair<int,PlayerData> playerData in players)
@@ -192,15 +192,10 @@ namespace SmashDomeNetwork
                             Debug.Log("LOGGOUT");
                             break;
                         case MsgType.MOVE:
-                            if(true) //eventually check if VR player
-                            {
-                                Move(newMsg);
-
-                            }
-                            else
-                            {
-                                //MoveVR(newMsg);
-                            }
+                            Move(newMsg);
+                            break;
+                        case MsgType.MOVEVR:
+                            MoveVR(newMsg);
                             break;
                         case MsgType.SHOOT:
                             Shoot(newMsg);                            
@@ -224,10 +219,9 @@ namespace SmashDomeNetwork
             //LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
             LoginMsg loginMsg = new LoginMsg(msg);
             ClientData clientData = server.connecting[loginMsg.from];
+            clientData.playerType = loginMsg.playerType;
             server.connecting.Remove(loginMsg.from);
             instantiatePlayerQ.Enqueue(clientData);
-            
-
         }
         private void Logout(byte[] msg)
         {
@@ -244,35 +238,40 @@ namespace SmashDomeNetwork
             playerController.rotation = moveMsg.playerRotation;
             playerController.cameratRotation = moveMsg.cameraRotation;
 
-            /*foreach (PlayerData player in users.Values)
-            {
-                if (player.clientData.id == moveMsg.from)
-                    continue;
-                moveMsg.to = player.clientData.id;
-                Debug.Log("MOVEMENT");
-                Send(moveMsg.GetBytes(), moveMsg.to);
-                
-            }*/
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
             Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
             int countTest = 0;
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                /*if (playerData.Value.clientData.id == moveMsg.from)
-                {
-                    print(String.Format("TEST {0}",countTest));
-                    countTest++;
-                    continue;
-                }*/
                 Debug.Log("Movement");
                 moveMsg.to = playerData.Value.clientData.id;
                 Send(msg, playerData.Value.clientData.id);
                 
             }
+        }
+        private void MoveVR(byte[] msg)
+        {
+            // MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
+            MoveVRMsg moveMsg = new MoveVRMsg(msg);
+            Player playerController = users[moveMsg.from].playerControl;
+            playerController.position = moveMsg.pos;
+            playerController.rotation = moveMsg.playerRotation;
+            playerController.cameratRotation = moveMsg.cameraRotation;
+            playerController.lHandPos = moveMsg.lHandPosition;
+            playerController.rHandPos = moveMsg.rHandPosition;
+            playerController.lHandRot = moveMsg.lHandRotation;
+            playerController.rHandRot = moveMsg.rHandRotation;
 
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+            int countTest = 0;
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            {
+                Debug.Log("Movement");
+                moveMsg.to = playerData.Value.clientData.id;
+                Send(msg, playerData.Value.clientData.id);
 
-
-
+            }
         }
         private void Shoot(byte[] msg)
         {

@@ -29,6 +29,7 @@ namespace SmashDomeNetwork
         public int msgType = 0;
         public int from = 0;
         public int to = 0;
+        public int playerType = 0;
         //protected byte[] msg; // used later when we move from json
         char delimiter = '\0';
 
@@ -64,11 +65,6 @@ namespace SmashDomeNetwork
         // used to append the size of the message to the front of the msg
         public byte[] FinishMsg(byte[] bytes)
         {
-            /*int size = bytes.Length;
-            Debug.Log(size);
-            byte[] test = IntToBytes(size);
-            Debug.Log(String.Format("CONVERSION TEST: {0}",BytesToInt(test)));*/
-            //return Join(IntToBytes(size), bytes);
             byte[] delim = { (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n' };
             return Join(bytes, delim);
         }
@@ -137,18 +133,6 @@ namespace SmashDomeNetwork
 
         public static byte[] QuaternionToBytes(UnityEngine.Quaternion vec)
         {
-            //byte[] bytes = new byte[12];
-            //Debug.Log(vec);
-            //float[] floatsOfVec = { vec.x, vec.y, vec.z, vec.w };
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    byte[] tmp = FloatToBytes(floatsOfVec[i]);
-            //    bytes[i * 4] = tmp[0];
-            //    bytes[i * 4 + 1] = tmp[1];
-            //    bytes[i * 4 + 2] = tmp[2];
-            //    bytes[i * 4 + 3] = tmp[3];
-            //}
-                
             byte[] bytes = Vec3ToBytes(vec.eulerAngles);
 
             return bytes;
@@ -156,27 +140,13 @@ namespace SmashDomeNetwork
 
         public static Quaternion BytesToQuaternion(byte[] bytes)
         {
-            //byte[] tmp = new byte[4];
-            //float[] floats = new float[4];
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    tmp[0] = bytes[i * 4];
-            //    tmp[1] = bytes[i * 4 + 1];
-            //    tmp[2] = bytes[i * 4 + 2];
-            //    tmp[3] = bytes[i * 4 + 3];
-            //    floats[i] = BytesToFloat(tmp);
-            //}
-
-            //Debug.Log(new Quaternion(floats[0], floats[1], floats[2], floats[3]));
-            //return new Quaternion(floats[0], floats[1], floats[2], floats[3]);
-            Quaternion tmp = Quaternion.Euler(BytesToVec3(bytes));
-            //Debug.Log(sizeof(tmp));
+            Debug.Log(Quaternion.Euler(BytesToVec3(bytes)));
             return Quaternion.Euler(BytesToVec3(bytes));
 
         }
 
 
-        /*******byte manipulation********/
+        /*****byte manipulation********/
         public static byte[] GetSegment(int start, int count, byte[] bytes)
         {
             byte[] ret = new byte[count];
@@ -202,13 +172,14 @@ namespace SmashDomeNetwork
     public class LoginMsg : Message
     {
         //constructor
-        public LoginMsg(int from)
+        public LoginMsg(int from, int playerType = 0)
         {
             this.msgNum = seq++;
             //reset if it gets too high
             if (seq > 2000000000) { seq = 1; }
             this.msgType = 1;
             this.from = from;
+            this.playerType = playerType;
         }
         public LoginMsg(byte[] bytes)
         {
@@ -216,11 +187,12 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
-
+            this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
         }
         public byte[] GetBytes()
         {
             byte[] msg = Base();
+            msg = Join(msg, IntToBytes(playerType));
             msg = FinishMsg(msg);
             return msg;
         }
@@ -265,6 +237,7 @@ namespace SmashDomeNetwork
             if (seq > 2000000000) { seq = 1; }
             this.msgType = 3;
             this.from = from;
+            this.playerType = 1; // 1 = PC Player
         }
         public MoveMsg(byte[] bytes)
         {
@@ -272,18 +245,16 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.pos = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
-            /*this.playerRotation = BytesToQuaternion(GetSegment(index, 16, bytes)); index += 16;//16 bytes (4 floats)
-            this.cameraRotation = BytesToQuaternion(GetSegment(index, 16, bytes)); index += 16;*/
             this.playerRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
             this.cameraRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;
         }
         public byte[] GetBytes()
         {
             byte[] msg = Base();
+            msg = Join(msg, IntToBytes(playerType));
             msg = Join(msg, Vec3ToBytes(this.pos));
-            /*msg = Join(msg, QuaternionToBytes(this.playerRotation));
-            msg = Join(msg, QuaternionToBytes(this.cameraRotation));*/
             msg = Join(msg, Vec3ToBytes(this.playerRotation.eulerAngles));
             msg = Join(msg, Vec3ToBytes(this.cameraRotation.eulerAngles));
             msg = FinishMsg(msg);
@@ -295,10 +266,49 @@ namespace SmashDomeNetwork
 
     public class MoveVRMsg : Message
     {
+        public Vector3 pos;
+        public Quaternion playerRotation;
+        public Quaternion cameraRotation;
+        public Vector3 lHandPosition, rHandPosition;
+        public Quaternion lHandRotation, rHandRotation;
         public MoveVRMsg(int from)
         {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
             this.msgType = 4;
             this.from = from;
+            this.playerType = 2;//2 = VR player
+        }
+        public MoveVRMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.pos = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+            this.playerRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
+            this.cameraRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;
+            this.lHandPosition = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+            this.rHandPosition = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+            this.lHandRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
+            this.rHandRotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, IntToBytes(playerType));
+            msg = Join(msg, Vec3ToBytes(this.pos));
+            msg = Join(msg, Vec3ToBytes(this.playerRotation.eulerAngles));
+            msg = Join(msg, Vec3ToBytes(this.cameraRotation.eulerAngles));
+            msg = Join(msg, Vec3ToBytes(this.lHandPosition));
+            msg = Join(msg, Vec3ToBytes(this.rHandPosition));
+            msg = Join(msg, Vec3ToBytes(this.lHandRotation.eulerAngles));
+            msg = Join(msg, Vec3ToBytes(this.rHandRotation.eulerAngles));
+            msg = FinishMsg(msg);
+            Debug.Log("GOT MOVE BYTES");
+            return msg;
         }
 
     }
@@ -321,6 +331,7 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.position = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
             this.direction = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
 
@@ -430,14 +441,14 @@ namespace SmashDomeNetwork
 
     public class AddPlayerMsg : Message
     {
-        public int playerType;
-        public AddPlayerMsg(int from)
+        public AddPlayerMsg(int from, int playerType)
         {
             this.msgNum = seq++;
             //reset if it gets too high
             if (seq > 2000000000) { seq = 1; }
             this.msgType = 8;
             this.from = from;
+            this.playerType = playerType;
         }
         public AddPlayerMsg(byte[] bytes)
         {
@@ -445,71 +456,15 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
 
         }
         public byte[] GetBytes()
         {
             byte[] msg = Base();
-            msg = Join(msg, IntToBytes(this.to));
-            msg = Join(msg, IntToBytes(this.from));
+            msg = Join(msg, IntToBytes(this.playerType));
             msg = FinishMsg(msg);
             return msg;
         }
     }
-
-
-
-    public class TestMsg : Message
-    {
-        public int[] stuff = new int[50];
-
-        public TestMsg() { }
-
-        public void Setup()
-        {
-            for (int i = 0; i < 50; i++)
-            {
-                stuff[i] = i;
-            }
-        }
-        public void print()
-        {
-            for (int i = 0; i < 50; i++)
-            {
-                Debug.Log(stuff[i]);
-            }
-        }
-    }
-
-    public class BigTest : Message
-    {
-        //public List<Vector3> msgs = new List<Vector3>();
-        public List<int> userId = new List<int>();
-        public List<Vector3> positions = new List<Vector3>();
-        public List<Quaternion> rotation = new List<Quaternion>();
-        public BigTest() { }
-
-        public void Setup()
-        {
-            userId.Add(5);
-            positions.Add(new Vector3(1, 1, 1));
-            rotation.Add(Quaternion.identity);
-
-            userId.Add(3);
-            positions.Add(new Vector3(3, 3, 3));
-            rotation.Add(Quaternion.identity);
-
-        }
-        public void print()
-        {
-            for (int i = 0; i < userId.Count; i++)
-            {
-                Debug.Log(userId[i]);
-            }
-        }
-
-
-    }
-
-
 }
