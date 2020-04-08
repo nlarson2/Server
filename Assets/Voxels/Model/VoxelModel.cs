@@ -67,6 +67,7 @@ namespace SmashDomeVoxel
 
             //New cube order -> [height, width, depth]
             voxel = new Cube[voxelArraySize, voxelArraySize, voxelArraySize];
+            
 
             string[] sub;
             int h, w, d;
@@ -138,6 +139,7 @@ namespace SmashDomeVoxel
             Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
             return startPos + (new Vector3(-w, -h, -d)) * this.scale;
         }
+
         void merge(List<MeshRange> face)
         {
             bool change;
@@ -222,63 +224,78 @@ namespace SmashDomeVoxel
 
                         //FBLRTB
                         //front / back
-                        if (d - 1 >= 0 && d + 1 < voxelArraySize)
+                        if (d - 1 >= 0 )
                         {
                             //Add front faces
                             voxel[h, w, d].face[0] = voxel[h, w, d - 1] != null ? false : true;
                             if (voxel[h, w, d].face[0])
-                                addFace(front, arrayPos);
-
-                            //Add back faces
-                            voxel[h, w, d].face[1] = voxel[h, w, d + 1] != null ? false : true;
-                            if (voxel[h, w, d].face[1])
-                                addFace(back, arrayPos);
-
+                                addFace(front, arrayPos); 
                         }
                         else
                         {
                             //Add front faces if they're below the bounds of our array
-                            if (d - 1 < 0)
+                            if (d - 1 <= 0)
                                 addFace(front, arrayPos);
+                        }
+                        if( d + 1 < voxelArraySize) 
+                        {
+                            //Add back faces
+                            voxel[h, w, d].face[1] = voxel[h, w, d + 1] != null ? false : true;
+                            if (voxel[h, w, d].face[1])
+                                addFace(back, arrayPos); 
+
+                        }
+                        else
+                        {
                             //Add front faces if they're above the bounds of our array
-                            else if (d + 1 >= voxelArraySize)
+                            if (d + 1 >= voxelArraySize)
                                 addFace(back, arrayPos);
                         }
 
                         //left / right
-                        if (w - 1 >= 0 && w + 1 < voxelArraySize)
+                        if (w - 1 >= 0)
                         {
                             voxel[h, w, d].face[2] = voxel[h, w - 1, d] != null ? false : true;
                             if (voxel[h, w, d].face[2])
                                 addFace(left, arrayPos);
-
-
+                        }
+                        else
+                        {
+                            if (w - 1 <= 0)
+                                addFace(left, arrayPos);
+                        }
+                        if( w + 1 < voxelArraySize)
+                        {
                             voxel[h, w, d].face[3] = voxel[h, w + 1, d] != null ? false : true;
                             if (voxel[h, w, d].face[3])
                                 addFace(right, arrayPos);
                         }
                         else
                         {
-                            if (w - 1 < 0)
-                                addFace(left, arrayPos);
-                            else if (w + 1 == voxelArraySize)
+                            if (w + 1 == voxelArraySize)
                                 addFace(right, arrayPos);
                         }
 
                         //top / bottom
-                        if (h - 1 >= 0 && h + 1 < voxelArraySize)
+                        if (h - 1 >= 0)
                         {
                             voxel[h, w, d].face[4] = voxel[h - 1, w, d] != null ? false : true;
                             if (voxel[h, w, d].face[4])
                                 addFace(top, arrayPos);
+                        }
+                        else
+                        {
+                            if (h - 1 <= 0)
+                                addFace(top, arrayPos);
+                        }
+                        if(h + 1 < voxelArraySize)
+                        {
                             voxel[h, w, d].face[5] = voxel[h + 1, w, d] != null ? false : true;
                             if (voxel[h, w, d].face[5])
                                 addFace(bottom, arrayPos);
                         }
                         else
                         {
-                            if (h - 1 < 0)
-                                addFace(top, arrayPos);
                             if (h + 1 == voxelArraySize)
                                 addFace(bottom, arrayPos);
                         }
@@ -414,7 +431,7 @@ namespace SmashDomeVoxel
                         int posz = (int)((contactLocation.point.z + 2) * 4);
                         //Debug.Log(string.Format("Location of Collision: Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
                         //Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
-                        if (posy > 15 || posy < 0)
+                        if (posy > 15 || posy < 0 && voxel[15-posy,15-posx,15-posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
                             if (posy > 15)
@@ -422,7 +439,7 @@ namespace SmashDomeVoxel
                             if (posy < 0)
                                 posy = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
                         }
-                        if (posx > 15 || posx < 0)
+                        if (posx > 15 || posx < 0 && voxel[15 - posy, 15 - posx, 15 - posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSX: {0} {1}", posx, contactLocation.point.x));
                             if (posx > 15)
@@ -431,7 +448,7 @@ namespace SmashDomeVoxel
                                 posx = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSX: " + posx);
                         }
 
-                        if (posz > 15 || posz < 0)
+                        if (posz > 15 || posz < 0 && voxel[15 - posy, 15 - posx, 15 - posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posz, contactLocation.point.z));
                             if (posz > 15)
@@ -443,12 +460,32 @@ namespace SmashDomeVoxel
                         //Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
                         if (voxel[posy, posx, posz] == null)
                             Debug.Log("Already NULL");
-                        //Debug.Log(string.Format("CUBE POSX: {0} CUBE PosY: {1} CUBE PosZ: {2}",posx,posy,posz));
-                        //Debug.Log(string.Format("Contact POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
+                        Debug.Log(string.Format("Cube being deleted: {0} CUBE PosY: {1} CUBE PosZ: {2}",15-posx,15-posy,15-posz));
+                        Debug.Log(string.Format("point of collision: POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
 
 
                         //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
-                        voxel[15 - posy, 15 - posx, 15 - posz] = null;
+                        if (voxel[15 - posy, 15 - posx, 15 - posz] != null)
+                        {
+                            voxel[15 - posy, 15 - posx, 15 - posz] = null;
+                        } 
+                        else
+                        {
+                            int[] deleteCoords = { 0, 0, 0 };
+                            if (voxel[15 - posy, 15 - posx, 14 - posz] != null)
+                            {
+                                deleteCoords[0] = 15 - posy; deleteCoords[1] = 15 - posx; deleteCoords[2] =14 - posz;
+                            }
+                            else if (voxel[15 - posy, 14 - posx, 15 - posz] != null)
+                            {
+                                deleteCoords[0] = 15 - posy; deleteCoords[1] = 14 - posx; deleteCoords[2] =15 - posz;
+                            }
+                            else if (voxel[14 - posy, 15 - posx, 15 - posz] != null)
+                            {
+                                deleteCoords[0] = 14 - posy; deleteCoords[1] = 14 - posx; deleteCoords[2] =15 - posz;
+                            }
+                            voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
+                        }
                         shatterCube(contactLocation.point.x, contactLocation.point.y, contactLocation.point.z);
                         //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
                         //voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
@@ -594,16 +631,16 @@ namespace SmashDomeVoxel
             //this.gameObject.GetComponent<Collider>().enabled = false;
         }
 
-        public void FindCube()
-        {
-
-        }
-
         private void OnDrawGizmos()
         {
             float size = (float)Math.Pow(2, this.size) * this.scale;
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(this.transform.position, new Vector3(size, size, size));
+        }
+
+        public void print(string message)
+        {
+            Debug.Log(string.Format(message));
         }
 
     }
