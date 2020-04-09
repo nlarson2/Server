@@ -8,6 +8,7 @@ using SmashDomeNetwork;
 
 namespace SmashDomeVoxel
 {
+    [ExecuteInEditMode]
     public class VoxelModel : NetworkedItem
     {
 
@@ -39,7 +40,7 @@ namespace SmashDomeVoxel
         float cubesPivotDistance;
         Vector3 cubesPivot;
         public int size;
-        public static Cube[,,] voxel = null;
+        public  Cube[,,] voxel = null;
         public GameObject cube;
         public GameObject piece;
         public float scale;

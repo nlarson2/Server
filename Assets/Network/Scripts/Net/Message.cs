@@ -331,7 +331,7 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
-            this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            //this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.position = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
             this.direction = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
 
