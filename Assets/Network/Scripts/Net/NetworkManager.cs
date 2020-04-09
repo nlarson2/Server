@@ -136,16 +136,26 @@ namespace SmashDomeNetwork
             
             while(bulletQ.Count > 0)
             {
+                Debug.Log("Gets here");
                 Debug.Log(bulletQ.Count);
                 ShootMsg shootMsg = bulletQ.Dequeue();
                 //waiting on bullets
-                GameObject bull = Instantiate(bulletPrefab, shootMsg.position, Quaternion.identity);
+                //GameObject bull = Instantiate(bulletPrefab, shootMsg.position, Quaternion.identity);
+
+                // UPDATE HERE
+
+                GameObject bull = Instantiate(bulletPrefab, shootMsg.position, shootMsg.rotation);
+
                 Rigidbody rig = bull.GetComponent<Rigidbody>();
                 rig.useGravity = false;
                 //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
                 //rig.AddForce((transform.forward + transform.up / 4) * 2.0f);
-                int speed = 1;
-                rig.AddForce(shootMsg.direction.normalized * speed);
+                int speed = 2;
+
+                //rig.AddForce(shootMsg.direction * speed);
+                rig.AddForce(shootMsg.direction * speed);
+                
+                
                 Debug.Log("FIRED");
             }
         }

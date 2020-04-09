@@ -317,6 +317,7 @@ namespace SmashDomeNetwork
     {
         public Vector3 position;
         public Vector3 direction;
+        public Quaternion rotation;
         public ShootMsg(int from)
         {
             this.msgNum = seq++;
@@ -335,12 +336,17 @@ namespace SmashDomeNetwork
             this.position = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
             this.direction = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
 
+            // UPDATE HERE
+            // Took this from player message. I would think it'd need to be 16 because it's 4 floats, but the code in player rotation has 12 bytes. not sure why.
+            this.rotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
+
         }
         public byte[] GetBytes()
         {
             byte[] msg = Base();
             msg = Join(msg, Vec3ToBytes(this.position));
             msg = Join(msg, Vec3ToBytes(this.direction));
+            msg = Join(msg, Vec3ToBytes(this.rotation.eulerAngles));
             msg = FinishMsg(msg);
             return msg;
         }
