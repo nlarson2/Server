@@ -23,10 +23,11 @@ namespace SmashDomeVoxel
         public float scale = 0.25f;
         int voxelArraySize;
         public string outputfile;
-
+        Vector3 pos;
 
         void Start()
         {
+            pos = this.transform.position;
             voxelArraySize = (int)(Math.Pow(2, this.size));
             this.scale = cube.transform.localScale.x;
             voxel = new CubeBuilder[voxelArraySize, voxelArraySize, voxelArraySize];
@@ -39,7 +40,7 @@ namespace SmashDomeVoxel
                     for (int d = 0; d < voxelArraySize; d++)
                     {
                         voxel[w, h, d] = new CubeBuilder();
-                        GameObject obj = Instantiate(cube, startPos + (new Vector3(-w, -h, -d)) * this.scale, new Quaternion());
+                        GameObject obj = Instantiate(cube, pos + startPos + (new Vector3(-w, -h, -d)) * this.scale, new Quaternion());
                         voxel[w, h, d].obj = obj;
                         voxel[w, h, d].color = Color.red;
                         obj.GetComponent<MeshRenderer>().material.color = voxel[w, h, d].color;

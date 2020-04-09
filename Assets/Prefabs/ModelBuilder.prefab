@@ -123,8 +123,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eeebc9389782774ea274e41fe7650ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cubesInRow: 2
+  pieceSize: 0.2
   size: 0
   cube: {fileID: 8548484160691486230, guid: 7c1e46a0973e4f341a25335221bb6e77, type: 3}
+  piece: {fileID: 1147673696949695453, guid: 2f5a53bcc8abeff458da8f8b9bc079c2, type: 3}
   scale: 0
-  inputfile: Assets/cube.txt
+  inputfile: Assets/Text.txt
   collided: 0
+  explosionPrefab: {fileID: 0}
