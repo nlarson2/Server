@@ -24,7 +24,7 @@ namespace SmashDomeNetwork
         Server server;// = new Server(50000);
         protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
                                                                                                      // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
-        public List<StructureChangeMsg> structures = new List<StructureChangeMsg>();
+        public Dictionary<int, StructureChangeMsg> structures = new Dictionary<int, StructureChangeMsg>();
 
         public GameObject playerPrefab;   //Networked player model
         public GameObject bulletPrefab;
@@ -100,7 +100,7 @@ namespace SmashDomeNetwork
                     addPlayerMsg.to = player.clientData.id;
                     Send(addPlayerMsg.GetBytes(), addPlayerMsg.to);
                 }
-                foreach (StructureChangeMsg structMsg in structures)
+                foreach (StructureChangeMsg structMsg in structures.Values)
                 {
                     structMsg.to = player.clientData.id;
                     Debug.Log(String.Format("STRUCT SENT TO: {0}", structMsg.to));
@@ -145,12 +145,12 @@ namespace SmashDomeNetwork
                 // UPDATE HERE
 
                 GameObject bull = Instantiate(bulletPrefab, shootMsg.position, shootMsg.rotation);
-
+                
                 Rigidbody rig = bull.GetComponent<Rigidbody>();
                 rig.useGravity = false;
                 //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
                 //rig.AddForce((transform.forward + transform.up / 4) * 2.0f);
-                int speed = 2;
+                int speed = 6;
 
                 //rig.AddForce(shootMsg.direction * speed);
                 rig.AddForce(shootMsg.direction * speed);
@@ -296,12 +296,6 @@ namespace SmashDomeNetwork
             int countTest = 0;
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                /*if (playerData.Value.clientData.id == moveMsg.from)
-                {
-                    print(String.Format("TEST {0}",countTest));
-                    countTest++;
-                    continue;
-                }*/
                 Debug.Log("Movement");
                 shoot.to = playerData.Value.clientData.id;
                 Send(msg, playerData.Value.clientData.id);
@@ -316,6 +310,25 @@ namespace SmashDomeNetwork
         private void Structure()
         {
 
+        }
+        private int structCount = 0;
+
+        public int AddModel(StructureChangeMsg msg)
+        {
+            msg.from = structCount;
+            structures.Add(structCount, msg);
+            return structCount++;
+        }
+        public void ChangeModel(StructureChangeMsg msg)
+        {
+            structures[msg.from] = msg;
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            {
+                Debug.Log("StructChange");
+                msg.to = playerData.Value.clientData.id;
+                Send(msg.GetBytes(), playerData.Value.clientData.id);
+            }
         }
 
         private void SendSnapshot()

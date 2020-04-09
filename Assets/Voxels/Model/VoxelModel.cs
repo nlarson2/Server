@@ -11,7 +11,6 @@ namespace SmashDomeVoxel
     [ExecuteInEditMode]
     public class VoxelModel : NetworkedItem
     {
-
         public class Cube
         {
             public Color color;
@@ -35,6 +34,7 @@ namespace SmashDomeVoxel
         }
 
 
+        int id; //id of model
         public int cubesInRow = 2;
         public float pieceSize = 0.2f;
         float cubesPivotDistance;
@@ -75,7 +75,7 @@ namespace SmashDomeVoxel
             float r, g, b;
 
             float firstChange = ((float)(Math.Pow(2, this.size - 1)) - 0.5f) * this.scale;
-            Debug.Log(firstChange);
+            //Debug.Log(firstChange);
             Vector3 startPos = new Vector3(firstChange, firstChange, firstChange);
 
             //for (int i = 2; i < lines.Length; i++)
@@ -461,9 +461,9 @@ namespace SmashDomeVoxel
 
                         //Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
                         if (voxel[posy, posx, posz] == null)
-                            Debug.Log("Already NULL");
-                        Debug.Log(string.Format("Cube being deleted: {0} CUBE PosY: {1} CUBE PosZ: {2}",15-posx,15-posy,15-posz));
-                        Debug.Log(string.Format("point of collision: POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
+                            //Debug.Log("Already NULL");
+                        //Debug.Log(string.Format("Cube being deleted: {0} CUBE PosY: {1} CUBE PosZ: {2}",15-posx,15-posy,15-posz));
+                        //Debug.Log(string.Format("point of collision: POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
 
 
                         //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
@@ -504,6 +504,7 @@ namespace SmashDomeVoxel
                 }
                 resetMesh();
                 rebuildMesh();
+                meshChanged = true;
                 //Debug.Log(collision.gameObject.transform.position);
                 float bulletx = collision.gameObject.transform.position.x;
                 float bullety = collision.gameObject.transform.position.y;
@@ -559,6 +560,7 @@ namespace SmashDomeVoxel
            
         }
 
+        bool meshChanged = false;
         void Update()
         {
             if(this.netManager == null)
@@ -587,9 +589,9 @@ namespace SmashDomeVoxel
                     // Draws raycast line in scene
                     // DrawRay   (start position,     end position,                         color,      duration of time )
                     Debug.DrawRay(transform.position, Camera.main.transform.forward * 10, Color.green, 10.0f);
-                    Debug.Log("You hit the " + hit.transform.name); // ensure you picked right object
+                    //Debug.Log("You hit the " + hit.transform.name); // ensure you picked right object
                     Vector3 pointOfCollision = hit.point;
-                    Debug.Log("Hit at point: " + pointOfCollision.ToString("F4"));
+                    //Debug.Log("Hit at point: " + pointOfCollision.ToString("F4"));
                 }
             }
 
@@ -626,9 +628,19 @@ namespace SmashDomeVoxel
                 outMsg.pos = transform.position;
                 outMsg.Vertices = mesh.vertices;
                 outMsg.Triangles = mesh.triangles;
-                netManager.structures.Add(outMsg);
+                id = netManager.AddModel(outMsg);
                 hasran = true;
 
+            }
+            else if(meshChanged)
+            {
+                StructureChangeMsg outMsg = new StructureChangeMsg();
+                outMsg.from = this.id;
+                outMsg.pos = transform.position;
+                outMsg.Vertices = mesh.vertices;
+                outMsg.Triangles = mesh.triangles;
+                netManager.ChangeModel(outMsg);
+                meshChanged = false;
             }
             //this.gameObject.GetComponent<Collider>().enabled = false;
         }
