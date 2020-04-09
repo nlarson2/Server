@@ -425,10 +425,11 @@ namespace SmashDomeVoxel
                 {
                     try
                     {
+                        Vector3 contact = contactLocation.point - this.transform.position;
                         //Debug.Log(string.Format("Location of Collision Before Calculation: Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
-                        int posx = (int)((contactLocation.point.x + 2) * 4);
-                        int posy = (int)((contactLocation.point.y + 2) * 4);
-                        int posz = (int)((contactLocation.point.z + 2) * 4);
+                        int posx = (int)((contact.x + 2) * 4);
+                        int posy = (int)((contact.y + 2) * 4);
+                        int posz = (int)((contact.z + 2) * 4);
                         //Debug.Log(string.Format("Location of Collision: Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
                         //Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
                         if (posy > 15 || posy < 0 && voxel[15-posy,15-posx,15-posz] != null)
@@ -622,8 +623,8 @@ namespace SmashDomeVoxel
 
                 StructureChangeMsg outMsg = new StructureChangeMsg();
                 outMsg.pos = transform.position;
-                outMsg.vertices = mesh.vertices;
-                outMsg.triangles = mesh.triangles;
+                outMsg.Vertices = mesh.vertices;
+                outMsg.Triangles = mesh.triangles;
                 netManager.structures.Add(outMsg);
                 hasran = true;
 

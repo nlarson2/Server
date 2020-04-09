@@ -23,7 +23,7 @@ namespace SmashDomeNetwork
         public TcpListener listen;
 
         //public Queue<ClientData> newUserData = new Queue<ClientData>();
-        public Queue<String> msgQueue = new Queue<String>();
+        public Queue<byte[]> msgQueue = new Queue<byte[]>();
         public Dictionary<int, ClientData> connecting = new Dictionary<int, ClientData>();
 
         private List<Thread> threads = new List<Thread>();
@@ -69,8 +69,8 @@ namespace SmashDomeNetwork
                     connectionCount++;
 
                     //This is where the login notification will go*******************************
-                    LoginMsg msg = new LoginMsg((byte)clientData.id);
-                    byte[] message = msg.GetMessage();
+                    LoginMsg msg = new LoginMsg(clientData.id);
+                    byte[] message = msg.GetBytes();
                     stream.Write(message, 0, message.Length);
 
                     threads.Add( new Thread(() => ReceiveMsg(clientData)));
@@ -96,7 +96,7 @@ namespace SmashDomeNetwork
             {
                 try
                 {
-                    message = String.Empty;
+                    /*message = String.Empty;
                     int brackets = 0;
                     while (true)
                     {
@@ -121,7 +121,36 @@ namespace SmashDomeNetwork
                         }
                     }
                     msgQueue.Enqueue(message);
-                    //Debug.Log(message);
+                    //Debug.Log(message);*/
+                    /*byte[] sizeInBytes =
+                    {
+                        (byte)stream.ReadByte(),
+                        (byte)stream.ReadByte(),
+                        (byte)stream.ReadByte(),
+                        (byte)stream.ReadByte()
+
+                    };*/
+                    //Debug.Log("GOT SIZE");
+                    //int size = Message.BytesToInt(sizeInBytes);
+                    //Debug.Log(String.Format("SIZE: {0}", size));
+                    //if (size < 0) continue;
+                    //byte[] msg = new byte[size];
+                    List<byte> byteList = new List<byte>();
+                    int delimCount = 0;
+                    /*for (int i = 0; i < size; i++)
+                    {
+                        msg[i] = (byte)stream.ReadByte();
+                        Debug.Log("READING");
+                    }*/
+                    while(delimCount<8)
+                    {
+                        byte inByte = (byte)stream.ReadByte();
+                        byteList.Add(inByte);
+                        delimCount = (char)inByte == '\n' ? delimCount + 1 : 0;                       
+                    }
+                    if(byteList.Count > 16)
+                        msgQueue.Enqueue(byteList.ToArray());
+                    Debug.Log("ENQUEUED");
                 }
                 catch (SocketException e)
                 {

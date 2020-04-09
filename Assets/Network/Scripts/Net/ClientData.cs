@@ -11,6 +11,7 @@ namespace SmashDomeNetwork
         public Socket socket;
         public NetworkStream stream;
         public IPAddress ipAddress;
+        public int playerType;
 
         public ClientData(int id, Socket socket, NetworkStream stream, IPAddress ipAddress)
         {

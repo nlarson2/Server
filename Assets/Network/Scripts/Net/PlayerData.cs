@@ -18,6 +18,10 @@ namespace SmashDomeNetwork {
         {
             this.clientData = clientData;
         }
+        public int GetPlayerType()
+        {
+            return clientData.playerType;
+        }
         
     }
 }

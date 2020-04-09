@@ -94,7 +94,7 @@ public class OctreeBuilder : MonoBehaviour
         for(int i = 0; i < 8; i++)
         {
             node.node[i] = new Node();
-            addNodes(node.node[i], depth - 1, path + i.ToString());
+            addNodes(node.node[i], depth - 1, path + i.ToString()+ " ");
         }
         
     }
@@ -138,7 +138,7 @@ public class OctreeBuilder : MonoBehaviour
         time += Time.deltaTime;
         if (time > 12 && !filegenerated)
         {
-            GenFile("Assets/Test.txt");
+            GenFile("Assets/Arena.txt");
             filegenerated = true;
         }
     }
@@ -179,6 +179,7 @@ public class OctreeBuilder : MonoBehaviour
                 }
                 catch (Exception e) { }
             }
+            Debug.Log("DONE");
         }  
     }  
 }
