@@ -65,6 +65,7 @@ namespace SmashDomeVoxel
             Int32.TryParse(size, out this.size);
             float.TryParse(scale, out this.scale);
             voxelArraySize = (int)Math.Pow(2, this.size);
+            
 
             //New cube order -> [height, width, depth]
             voxel = new Cube[voxelArraySize, voxelArraySize, voxelArraySize];
@@ -431,62 +432,73 @@ namespace SmashDomeVoxel
                         int posx = (int)((contact.x + 2) * 4);
                         int posy = (int)((contact.y + 2) * 4);
                         int posz = (int)((contact.z + 2) * 4);
-                        //Debug.Log(string.Format("Location of Collision: Y:{0}  X:{1}  Z:{2}", posy, posx, posz));
-                        //Debug.Log(string.Format("Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
-                        if (posy > 15 || posy < 0 && voxel[15-posy,15-posx,15-posz] != null)
+                        int voxelCap = voxelArraySize - 1;
+                        Debug.Log(string.Format("POSY:{0}  POSX:{1}  POSZ:{2}", posy, posx, posz));
+                        Debug.Log(string.Format("ContactY:{0}  ContactX:{1}  ContactZ:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                        if (posy > voxelCap || posy < 0 && voxel[(voxelCap) -posy,(voxelCap) -posx,(voxelCap) -posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
-                            if (posy > 15)
-                                posy = 15; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
+                            if (posy > voxelArraySize-1)
+                                posy = voxelArraySize-1; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
                             if (posy < 0)
                                 posy = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
                         }
-                        if (posx > 15 || posx < 0 && voxel[15 - posy, 15 - posx, 15 - posz] != null)
+                        if (posx > voxelCap || posx < 0 && voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSX: {0} {1}", posx, contactLocation.point.x));
-                            if (posx > 15)
-                                posx = 15; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSX: " +  posx);
+                            if (posx > voxelCap)
+                                posx = voxelCap; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSX: " +  posx);
                             if (posx < 0)
                                 posx = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSX: " + posx);
                         }
 
-                        if (posz > 15 || posz < 0 && voxel[15 - posy, 15 - posx, 15 - posz] != null)
+                        if (posz > voxelCap || posz < 0 && voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posz, contactLocation.point.z));
-                            if (posz > 15)
+                            if (posz > voxelCap)
                                 posz = 15; /*Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSZ: " +  posz);*/
                             if (posz < 0)
                                 posz = 0; /*Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSZ: " + posz);*/
                         }
 
                         //Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
-                        if (voxel[posy, posx, posz] == null)
-                            //Debug.Log("Already NULL");
                         //Debug.Log(string.Format("Cube being deleted: {0} CUBE PosY: {1} CUBE PosZ: {2}",15-posx,15-posy,15-posz));
                         //Debug.Log(string.Format("point of collision: POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
 
 
                         //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
-                        if (voxel[15 - posy, 15 - posx, 15 - posz] != null)
+                        if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
                         {
-                            voxel[15 - posy, 15 - posx, 15 - posz] = null;
+                            voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] = null;
                         } 
                         else
                         {
-                            int[] deleteCoords = { 0, 0, 0 };
-                            if (voxel[15 - posy, 15 - posx, 14 - posz] != null)
+                            int check = 0; // check value will iterate around detected collision location until it finds deleteable voxel
+                            bool voxelFound = false;
+                            while(!voxelFound)
                             {
-                                deleteCoords[0] = 15 - posy; deleteCoords[1] = 15 - posx; deleteCoords[2] =14 - posz;
+
+                                int[] deleteCoords = { 0, 0, 0 };
+                                if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - check - posz] != null)
+                                {
+                                    deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - check - posz;
+                                }
+                                else if (voxel[voxelCap - posy, voxelCap - check - posx, voxelCap - posz] != null)
+                                {
+                                    deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - check - posx; deleteCoords[2] = voxelCap - posz;
+                                }
+                                else if (voxel[voxelCap - check - posy, voxelCap - posx, voxelCap - posz] != null)
+                                {
+                                    deleteCoords[0] = voxelCap - check - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - posz;
+                                }
+                                if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] == null)
+                                    check += 1;
+                                else if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] != null)
+                                {
+                                    voxelFound = true;
+                                    voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
+                                }
                             }
-                            else if (voxel[15 - posy, 14 - posx, 15 - posz] != null)
-                            {
-                                deleteCoords[0] = 15 - posy; deleteCoords[1] = 14 - posx; deleteCoords[2] =15 - posz;
-                            }
-                            else if (voxel[14 - posy, 15 - posx, 15 - posz] != null)
-                            {
-                                deleteCoords[0] = 14 - posy; deleteCoords[1] = 14 - posx; deleteCoords[2] =15 - posz;
-                            }
-                            voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
                         }
                         shatterCube(contactLocation.point.x, contactLocation.point.y, contactLocation.point.z);
                         //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
