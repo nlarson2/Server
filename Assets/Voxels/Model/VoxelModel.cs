@@ -432,14 +432,14 @@ namespace SmashDomeVoxel
                         int posx = (int)((contact.x + 2) * 4);
                         int posy = (int)((contact.y + 2) * 4);
                         int posz = (int)((contact.z + 2) * 4);
-                        int voxelCap = voxelArraySize - 1;
-                        Debug.Log(string.Format("POSY:{0}  POSX:{1}  POSZ:{2}", posy, posx, posz));
-                        Debug.Log(string.Format("ContactY:{0}  ContactX:{1}  ContactZ:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
-                        if (posy > voxelCap || posy < 0 && voxel[(voxelCap) -posy,(voxelCap) -posx,(voxelCap) -posz] != null)
+                        int voxelCap = voxelArraySize - 1;      // This value is used to track outer bounds on voxel array size. Equals size of array - 1 (zero-based indexing)
+                        //Debug.Log(string.Format("POSY:{0}  POSX:{1}  POSZ:{2}", posy, posx, posz));
+                        //Debug.Log(string.Format("ContactY:{0}  ContactX:{1}  ContactZ:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                        if (posy > voxelCap || posy < 0 && voxel[(voxelCap) - posy, (voxelCap) - posx, (voxelCap) - posz] != null)
                         {
                             //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
-                            if (posy > voxelArraySize-1)
-                                posy = voxelArraySize-1; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
+                            if (posy > voxelCap)
+                                posy = voxelCap; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
                             if (posy < 0)
                                 posy = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
                         }
@@ -470,29 +470,51 @@ namespace SmashDomeVoxel
                         if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
                         {
                             voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] = null;
-                        } 
+                        }
                         else
                         {
-                            int check = 0; // check value will iterate around detected collision location until it finds deleteable voxel
+                            int check = 0; // check value will iterate around detected collision location until it finds closest delete-able voxel
                             bool voxelFound = false;
-                            while(!voxelFound)
+                            while (!voxelFound)
                             {
 
                                 int[] deleteCoords = { 0, 0, 0 };
+
+                                // Check Z-axis
                                 if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - check - posz] != null)
                                 {
                                     deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - check - posz;
                                 }
+                                else if (voxel[voxelCap - posy, voxelCap - posx, voxelCap + check - posz] != null)
+                                {
+                                    deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap + check - posz;
+                                }
+
+                                // Force Break X-Axis
                                 else if (voxel[voxelCap - posy, voxelCap - check - posx, voxelCap - posz] != null)
                                 {
                                     deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - check - posx; deleteCoords[2] = voxelCap - posz;
                                 }
+                                else if (voxel[voxelCap - posy, voxelCap + check - posx, voxelCap - posz] != null)
+                                {
+                                    deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap + check - posx; deleteCoords[2] = voxelCap - posz;
+                                }
+
+                                // Force Break Y-Axis
                                 else if (voxel[voxelCap - check - posy, voxelCap - posx, voxelCap - posz] != null)
                                 {
                                     deleteCoords[0] = voxelCap - check - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - posz;
                                 }
+                                else if (voxel[voxelCap + check - posy, voxelCap - posx, voxelCap - posz] != null)
+                                {
+                                    deleteCoords[0] = voxelCap + check - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - posz;
+                                }
+
+                                // If we wanna delete a voxel that's already null, then we need to check one more iteration
                                 if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] == null)
                                     check += 1;
+
+                                // Otherwise, we found a breakable voxel, so we need to set that voxel to null and exit loop by setting voxelFound = true
                                 else if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] != null)
                                 {
                                     voxelFound = true;
@@ -500,7 +522,11 @@ namespace SmashDomeVoxel
                                 }
                             }
                         }
+
+
                         shatterCube(contactLocation.point.x, contactLocation.point.y, contactLocation.point.z);
+
+                        // Logic for deleting a large section of cubes. If/When this is implemented, we need to change all 15's to voxelCap
                         //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
                         //voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
                         //voxel[15 - posy, 15 - posx, 15 - posz+1] = null;
@@ -509,7 +535,7 @@ namespace SmashDomeVoxel
                         //voxel[15 - posy + 1, 15 - posx+1, 15 - posz] = null;
                         //voxel[15 - posy, 15 - posx+1, 15 - posz + 1] = null;
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         Destroy(collision.gameObject);
                     }
@@ -597,7 +623,7 @@ namespace SmashDomeVoxel
                             Debug.DrawLine(contact.point, contact.point, Color.green, 2, false);
                         }
                     }
-                    Destroy(hit.transform.gameObject);
+                    //Destroy(hit.transform.gameObject);
                     // Draws raycast line in scene
                     // DrawRay   (start position,     end position,                         color,      duration of time )
                     Debug.DrawRay(transform.position, Camera.main.transform.forward * 10, Color.green, 10.0f);
