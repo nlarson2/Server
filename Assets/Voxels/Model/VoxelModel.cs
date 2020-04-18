@@ -40,7 +40,7 @@ namespace SmashDomeVoxel
         float cubesPivotDistance;
         Vector3 cubesPivot;
         public int size;
-        public  Cube[,,] voxel = null;
+        public Cube[,,] voxel = null;
         public GameObject cube;
         public GameObject piece;
         public float scale;
@@ -65,11 +65,11 @@ namespace SmashDomeVoxel
             Int32.TryParse(size, out this.size);
             float.TryParse(scale, out this.scale);
             voxelArraySize = (int)Math.Pow(2, this.size);
-            
+
 
             //New cube order -> [height, width, depth]
             voxel = new Cube[voxelArraySize, voxelArraySize, voxelArraySize];
-            
+
 
             string[] sub;
             int h, w, d;
@@ -226,12 +226,12 @@ namespace SmashDomeVoxel
 
                         //FBLRTB
                         //front / back
-                        if (d - 1 >= 0 )
+                        if (d - 1 >= 0)
                         {
                             //Add front faces
                             voxel[h, w, d].face[0] = voxel[h, w, d - 1] != null ? false : true;
                             if (voxel[h, w, d].face[0])
-                                addFace(front, arrayPos); 
+                                addFace(front, arrayPos);
                         }
                         else
                         {
@@ -239,12 +239,12 @@ namespace SmashDomeVoxel
                             if (d - 1 <= 0)
                                 addFace(front, arrayPos);
                         }
-                        if( d + 1 < voxelArraySize) 
+                        if (d + 1 < voxelArraySize)
                         {
                             //Add back faces
                             voxel[h, w, d].face[1] = voxel[h, w, d + 1] != null ? false : true;
                             if (voxel[h, w, d].face[1])
-                                addFace(back, arrayPos); 
+                                addFace(back, arrayPos);
 
                         }
                         else
@@ -266,7 +266,7 @@ namespace SmashDomeVoxel
                             if (w - 1 <= 0)
                                 addFace(left, arrayPos);
                         }
-                        if( w + 1 < voxelArraySize)
+                        if (w + 1 < voxelArraySize)
                         {
                             voxel[h, w, d].face[3] = voxel[h, w + 1, d] != null ? false : true;
                             if (voxel[h, w, d].face[3])
@@ -290,7 +290,7 @@ namespace SmashDomeVoxel
                             if (h - 1 <= 0)
                                 addFace(top, arrayPos);
                         }
-                        if(h + 1 < voxelArraySize)
+                        if (h + 1 < voxelArraySize)
                         {
                             voxel[h, w, d].face[5] = voxel[h + 1, w, d] != null ? false : true;
                             if (voxel[h, w, d].face[5])
@@ -425,6 +425,7 @@ namespace SmashDomeVoxel
             {
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
+                    Debug.Log(string.Format("OnCollision: {0}", contactLocation.point));
                     try
                     {
                         Vector3 contact = contactLocation.point - this.transform.position;
@@ -523,7 +524,7 @@ namespace SmashDomeVoxel
                                 {
                                     if (collision.gameObject.tag == "Bullet")
                                     {
-                                        voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
+                                        //voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
                                     }
                                     else if (collision.gameObject.tag == "Explosive")
                                     {
@@ -554,6 +555,145 @@ namespace SmashDomeVoxel
                 //collision.gameObject.GetComponent<Collider>().enabled = false;
             }
         }
+        //private void OnCollisionEnter(Collision collision)
+        public void Collide(Vector3 contact)
+        {
+            //This logic verifies that in order to destroy part of the model, the object colliding with the model must be a bullet (with tag = "Bullet")
+            //if (collision.gameObject.tag == "Bullet" || collision.gameObject.tag == "Explosive")
+
+            Debug.Log(string.Format(string.Format("Collide: {0}", contact)));
+            //foreach (ContactPoint contactLocation in contacts)
+
+            try
+            {
+                contact -= this.transform.position;
+                //Debug.Log(string.Format("Location of Collision Before Calculation: Y:{0}  X:{1}  Z:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                int posx = (int)((contact.x + 2) * 4);
+                int posy = (int)((contact.y + 2) * 4);
+                int posz = (int)((contact.z + 2) * 4);
+                int voxelCap = voxelArraySize - 1;      // This value is used to track outer bounds on voxel array size. Equals size of array - 1 (zero-based indexing)
+                                                        //Debug.Log(string.Format("POSY:{0}  POSX:{1}  POSZ:{2}", posy, posx, posz));
+                                                        //Debug.Log(string.Format("ContactY:{0}  ContactX:{1}  ContactZ:{2}", contactLocation.point.y, contactLocation.point.x, contactLocation.point.z));
+                if (posy > voxelCap || posy < 0 && voxel[(voxelCap) - posy, (voxelCap) - posx, (voxelCap) - posz] != null)
+                {
+                    //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posy, contactLocation.point.y));
+                    if (posy > voxelCap)
+                        posy = voxelCap; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSY: " +  posy);
+                    if (posy < 0)
+                        posy = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSY: " + posy);
+                }
+                if (posx > voxelCap || posx < 0 && voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
+                {
+                    //Debug.Log(string.Format("Point of collision outside bounds! POSX: {0} {1}", posx, contactLocation.point.x));
+                    if (posx > voxelCap)
+                        posx = voxelCap; //Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSX: " +  posx);
+                    if (posx < 0)
+                        posx = 0; //Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSX: " + posx);
+                }
+
+                if (posz > voxelCap || posz < 0 && voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
+                {
+                    //Debug.Log(string.Format("Point of collision outside bounds! POSY: {0} {1}", posz, contactLocation.point.z));
+                    if (posz > voxelCap)
+                        posz = 15; /*Debug.Log("WAS GREATER THAN 15! Adjusted point of collision: POSZ: " +  posz);*/
+                    if (posz < 0)
+                        posz = 0; /*Debug.Log("WAS LESS THAN 15! Adjusted Point of collision: POSZ: " + posz);*/
+                }
+
+                //Debug.Log(string.Format("POSZ: {0} {1}", posz, contactLocation.point.z));
+                //Debug.Log(string.Format("Cube being deleted: {0} CUBE PosY: {1} CUBE PosZ: {2}",15-posx,15-posy,15-posz));
+                //Debug.Log(string.Format("point of collision: POSX: {0} Contact PosY: {1} Contact PosZ: {2}", contactLocation.point.x, contactLocation.point.y, contactLocation.point.z));
+
+
+                //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
+
+                if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null && false)
+                {
+                    Debug.Log("IT SHOULD NEVER GET HERE");
+                    voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] = null;
+                }
+                else
+                {
+                    int check = 0; // check value will iterate around detected collision location until it finds closest delete-able voxel
+                    bool voxelFound = false;
+                    while (!voxelFound)
+                    {
+                        int[] deleteCoords = { 0, 0, 0 };
+
+                        // Check Z-axis
+                        if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - check - posz] != null)
+                        {
+                            deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - check - posz;
+                        }
+                        else if (voxel[voxelCap - posy, voxelCap - posx, voxelCap + check - posz] != null)
+                        {
+                            deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap + check - posz;
+                        }
+
+                        // Force Break X-Axis
+                        else if (voxel[voxelCap - posy, voxelCap - check - posx, voxelCap - posz] != null)
+                        {
+                            deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap - check - posx; deleteCoords[2] = voxelCap - posz;
+                        }
+                        else if (voxel[voxelCap - posy, voxelCap + check - posx, voxelCap - posz] != null)
+                        {
+                            deleteCoords[0] = voxelCap - posy; deleteCoords[1] = voxelCap + check - posx; deleteCoords[2] = voxelCap - posz;
+                        }
+
+                        // Force Break Y-Axis
+                        else if (voxel[voxelCap - check - posy, voxelCap - posx, voxelCap - posz] != null)
+                        {
+                            deleteCoords[0] = voxelCap - check - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - posz;
+                        }
+                        else if (voxel[voxelCap + check - posy, voxelCap - posx, voxelCap - posz] != null)
+                        {
+                            deleteCoords[0] = voxelCap + check - posy; deleteCoords[1] = voxelCap - posx; deleteCoords[2] = voxelCap - posz;
+                        }
+
+                        // If we wanna delete a voxel that's already null, then we need to check one more iteration
+                        if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] == null)
+                        {
+                            check += 1;
+                            continue;
+                        }
+
+                        // Otherwise, we found a breakable voxel, so we need to set that voxel to null and exit loop by setting voxelFound = true
+                        else if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] != null)
+                        {
+                            /* if (collision.gameObject.tag == "Bullet")
+                             {*/
+                            voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
+                            //}
+                            //else if (collision.gameObject.tag == "Explosive")
+                            // {
+                            //    explosionRadius(deleteCoords[0], deleteCoords[1], deleteCoords[2]);
+                            //}
+                            voxelFound = true;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                //Destroy(collision.gameObject);
+            }
+
+            resetMesh();
+            rebuildMesh();
+            meshChanged = true;
+            //Debug.Log(collision.gameObject.transform.position);
+            /* float bulletx = collision.gameObject.transform.position.x;
+             float bullety = collision.gameObject.transform.position.y;
+             float bulletz = collision.gameObject.transform.position.z;
+             //Debug.Log(string.Format("BULLET POSX: {0} BULLET PosY: {1} BULLET PosZ: {2}", bulletx, bullety, bulletz));
+             //shatterCube(bulletx, bullety, bulletz);
+             Destroy(collision.gameObject); */ // Destroys object that collided with our Model
+                                               //collision.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                                               //collision.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                                               //collision.gameObject.GetComponent<Collider>().enabled = false;
+
+        }
+
 
 
         void shatterCube(float spawnx, float spawny, float spawnz)
@@ -561,7 +701,7 @@ namespace SmashDomeVoxel
             //Debug.Log(string.Format("SpawnX: {0} SpawnY: {1} SpawnZ: {2}", spawnx, spawny, spawnz));
             for (int x = 0; x < 2; x++)
             {
-                for(int y = 0; y < 2; y++)
+                for (int y = 0; y < 2; y++)
                 {
                     for (int z = 0; z < 2; z++)
                     {
@@ -569,7 +709,7 @@ namespace SmashDomeVoxel
                         //Debug.Log(adjust);
 
                         // Create piece cube will be broken into
-                       
+
 
                         GameObject obj = Instantiate(piece, new Vector3(spawnx, spawny, spawnz), Quaternion.identity);
 
@@ -588,18 +728,18 @@ namespace SmashDomeVoxel
                         //pieceRB.AddForce(thrust, 0, thrust, ForceMode.Impulse);
                         //pieceRB.useGravity = true;
                     }
- 
+
                 }
 
             }
-            
-           
+
+
         }
 
         bool meshChanged = false;
         void Update()
         {
-            if(this.netManager == null)
+            if (this.netManager == null)
             {
                 this.netManager = NetworkManager.Instance;
                 return;
@@ -669,7 +809,7 @@ namespace SmashDomeVoxel
                 hasran = true;
 
             }
-            else if(meshChanged)
+            else if (meshChanged)
             {
                 StructureChangeMsg outMsg = new StructureChangeMsg();
                 outMsg.from = this.id;
@@ -696,7 +836,7 @@ namespace SmashDomeVoxel
 
         public void explosionRadius(int y, int x, int z)
         {
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 voxel[y, x, z + i] = null;
                 voxel[y + 1, x - 1, z + i] = null;
@@ -712,33 +852,33 @@ namespace SmashDomeVoxel
                 voxel[y - 2, x, z + i] = null;
                 voxel[y - 1, x + 1, z + i] = null;
 
-                voxel[y+i, x, z + i] = null;
-                voxel[y + 1 +i, x - 1, z + i] = null;
-                voxel[y + 1 +i , x, z + i] = null;
-                voxel[y + 2+i, x, z + i] = null;
-                voxel[y + 1+i, x + 1, z + i] = null;
-                voxel[y+i, x - 1, z + i] = null;
-                voxel[y+i, x + 1, z + i] = null;
-                voxel[y+i, x - 2, z + i] = null;
-                voxel[y+i, x + 2, z + i] = null;
-                voxel[y - 1+i, x - 1, z + i] = null;
-                voxel[y - 1+i, x, z + i] = null;
-                voxel[y - 2+i, x, z + i] = null;
-                voxel[y - 1+i, x + 1, z + i] = null;
+                voxel[y + i, x, z + i] = null;
+                voxel[y + 1 + i, x - 1, z + i] = null;
+                voxel[y + 1 + i, x, z + i] = null;
+                voxel[y + 2 + i, x, z + i] = null;
+                voxel[y + 1 + i, x + 1, z + i] = null;
+                voxel[y + i, x - 1, z + i] = null;
+                voxel[y + i, x + 1, z + i] = null;
+                voxel[y + i, x - 2, z + i] = null;
+                voxel[y + i, x + 2, z + i] = null;
+                voxel[y - 1 + i, x - 1, z + i] = null;
+                voxel[y - 1 + i, x, z + i] = null;
+                voxel[y - 2 + i, x, z + i] = null;
+                voxel[y - 1 + i, x + 1, z + i] = null;
 
-                voxel[y, x+i, z + i] = null;
-                voxel[y + 1, x+i - 1, z + i] = null;
-                voxel[y + 1, x+i, z + i] = null;
-                voxel[y + 2, x+i, z + i] = null;
-                voxel[y + 1, x+i + 1, z + i] = null;
-                voxel[y, x - 1+i, z + i] = null;
-                voxel[y, x + 1+i, z + i] = null;
-                voxel[y, x - 2+i, z + i] = null;
-                voxel[y, x + 2+i, z + i] = null;
-                voxel[y - 1, x+i - 1, z + i] = null;
-                voxel[y - 1, x+i, z + i] = null;
-                voxel[y - 2, x+i, z + i] = null;
-                voxel[y - 1, x+i + 1, z + i] = null;
+                voxel[y, x + i, z + i] = null;
+                voxel[y + 1, x + i - 1, z + i] = null;
+                voxel[y + 1, x + i, z + i] = null;
+                voxel[y + 2, x + i, z + i] = null;
+                voxel[y + 1, x + i + 1, z + i] = null;
+                voxel[y, x - 1 + i, z + i] = null;
+                voxel[y, x + 1 + i, z + i] = null;
+                voxel[y, x - 2 + i, z + i] = null;
+                voxel[y, x + 2 + i, z + i] = null;
+                voxel[y - 1, x + i - 1, z + i] = null;
+                voxel[y - 1, x + i, z + i] = null;
+                voxel[y - 2, x + i, z + i] = null;
+                voxel[y - 1, x + i + 1, z + i] = null;
 
             }
         }
