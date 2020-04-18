@@ -421,7 +421,7 @@ namespace SmashDomeVoxel
         private void OnCollisionEnter(Collision collision)
         {
             //This logic verifies that in order to destroy part of the model, the object colliding with the model must be a bullet (with tag = "Bullet")
-            if (collision.gameObject.tag == "Bullet")
+            if (collision.gameObject.tag == "Bullet" || collision.gameObject.tag == "Explosive")
             {
                 foreach (ContactPoint contactLocation in collision.contacts)
                 {
@@ -467,8 +467,10 @@ namespace SmashDomeVoxel
 
 
                         //shatterCube(contactLocation.point.x,contactLocation.point.y,contactLocation.point.z);
-                        if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null)
+
+                        if (voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] != null && false)
                         {
+                            Debug.Log("IT SHOULD NEVER GET HERE");
                             voxel[voxelCap - posy, voxelCap - posx, voxelCap - posz] = null;
                         }
                         else
@@ -477,7 +479,6 @@ namespace SmashDomeVoxel
                             bool voxelFound = false;
                             while (!voxelFound)
                             {
-
                                 int[] deleteCoords = { 0, 0, 0 };
 
                                 // Check Z-axis
@@ -512,28 +513,26 @@ namespace SmashDomeVoxel
 
                                 // If we wanna delete a voxel that's already null, then we need to check one more iteration
                                 if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] == null)
+                                {
                                     check += 1;
+                                    continue;
+                                }
 
                                 // Otherwise, we found a breakable voxel, so we need to set that voxel to null and exit loop by setting voxelFound = true
                                 else if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] != null)
                                 {
+                                    if (collision.gameObject.tag == "Bullet")
+                                    {
+                                        voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
+                                    }
+                                    else if (collision.gameObject.tag == "Explosive")
+                                    {
+                                        explosionRadius(deleteCoords[0], deleteCoords[1], deleteCoords[2]);
+                                    }
                                     voxelFound = true;
-                                    voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
                                 }
                             }
                         }
-
-
-                        shatterCube(contactLocation.point.x, contactLocation.point.y, contactLocation.point.z);
-
-                        // Logic for deleting a large section of cubes. If/When this is implemented, we need to change all 15's to voxelCap
-                        //voxel[15 - posy+1, 15 - posx, 15 - posz+1] = null;
-                        //voxel[15 - posy+1, 15 - posx, 15 - posz] = null;
-                        //voxel[15 - posy, 15 - posx, 15 - posz+1] = null;
-                        //voxel[15 - posy, 15 - posx+1, 15 - posz] = null;
-                        //voxel[15 - posy + 1, 15 - posx+1, 15 - posz + 1] = null;
-                        //voxel[15 - posy + 1, 15 - posx+1, 15 - posz] = null;
-                        //voxel[15 - posy, 15 - posx+1, 15 - posz + 1] = null;
                     }
                     catch (Exception e)
                     {
@@ -560,7 +559,6 @@ namespace SmashDomeVoxel
         void shatterCube(float spawnx, float spawny, float spawnz)
         {
             //Debug.Log(string.Format("SpawnX: {0} SpawnY: {1} SpawnZ: {2}", spawnx, spawny, spawnz));
-            float thrust = .2f;
             for (int x = 0; x < 2; x++)
             {
                 for(int y = 0; y < 2; y++)
@@ -693,6 +691,55 @@ namespace SmashDomeVoxel
         public void print(string message)
         {
             Debug.Log(string.Format(message));
+        }
+
+        public void explosionRadius(int y, int x, int z)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                voxel[y, x, z + i] = null;
+                voxel[y + 1, x - 1, z + i] = null;
+                voxel[y + 1, x, z + i] = null;
+                voxel[y + 2, x, z + i] = null;
+                voxel[y + 1, x + 1, z + i] = null;
+                voxel[y, x - 1, z + i] = null;
+                voxel[y, x + 1, z + i] = null;
+                voxel[y, x - 2, z + i] = null;
+                voxel[y, x + 2, z + i] = null;
+                voxel[y - 1, x - 1, z + i] = null;
+                voxel[y - 1, x, z + i] = null;
+                voxel[y - 2, x, z + i] = null;
+                voxel[y - 1, x + 1, z + i] = null;
+
+                voxel[y+i, x, z + i] = null;
+                voxel[y + 1 +i, x - 1, z + i] = null;
+                voxel[y + 1 +i , x, z + i] = null;
+                voxel[y + 2+i, x, z + i] = null;
+                voxel[y + 1+i, x + 1, z + i] = null;
+                voxel[y+i, x - 1, z + i] = null;
+                voxel[y+i, x + 1, z + i] = null;
+                voxel[y+i, x - 2, z + i] = null;
+                voxel[y+i, x + 2, z + i] = null;
+                voxel[y - 1+i, x - 1, z + i] = null;
+                voxel[y - 1+i, x, z + i] = null;
+                voxel[y - 2+i, x, z + i] = null;
+                voxel[y - 1+i, x + 1, z + i] = null;
+
+                voxel[y, x+i, z + i] = null;
+                voxel[y + 1, x+i - 1, z + i] = null;
+                voxel[y + 1, x+i, z + i] = null;
+                voxel[y + 2, x+i, z + i] = null;
+                voxel[y + 1, x+i + 1, z + i] = null;
+                voxel[y, x - 1+i, z + i] = null;
+                voxel[y, x + 1+i, z + i] = null;
+                voxel[y, x - 2+i, z + i] = null;
+                voxel[y, x + 2+i, z + i] = null;
+                voxel[y - 1, x+i - 1, z + i] = null;
+                voxel[y - 1, x+i, z + i] = null;
+                voxel[y - 2, x+i, z + i] = null;
+                voxel[y - 1, x+i + 1, z + i] = null;
+
+            }
         }
 
     }

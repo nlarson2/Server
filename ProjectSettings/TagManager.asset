@@ -7,6 +7,7 @@ TagManager:
   - Node
   - Model
   - Bullet
+  - Explosive
   layers:
   - Default
   - TransparentFX

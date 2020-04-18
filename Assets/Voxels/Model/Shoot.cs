@@ -5,15 +5,21 @@ using UnityEngine;
 public class Shoot : MonoBehaviour
 {
     public GameObject bullet;
+    public GameObject grenade;
     public Transform cam;
     public bool hasGravity = true;
     public float fireRate = 0.5f;
-    float curtime = 0.0f;
+    public float throwRate = 0.5f;
+    float curtime  = 0.0f;
+    float nadeTime = 0.0f;
     bool mousedown = false;
+    bool grenadeThrown = false;
     // Update is called once per frame
     void Update()
     {
         curtime += Time.deltaTime;
+        nadeTime += Time.deltaTime;
+        // IF left mouse click pressed -> shoot 
         if(Input.GetMouseButtonDown(0))
         {
             mousedown = true;
@@ -21,6 +27,18 @@ public class Shoot : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             mousedown = false;
+        }
+
+        //IF E key pressed -> Throw Grenade
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Debug.Log("G is pressed");
+            grenadeThrown = true;
+        }
+        if (Input.GetKeyUp(KeyCode.E))
+        {
+            Debug.Log("G is releasd");
+            grenadeThrown = false;
         }
 
         //Right click for raycast testing
@@ -43,17 +61,24 @@ public class Shoot : MonoBehaviour
         if (mousedown && curtime > fireRate)
         {
             Vector3 dir = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-            //GameObject bull = Instantiate(bullet, transform.localPosition + transform.forward, transform.rotation);
-            //GameObject bull = Instantiate(bullet, transform.localPosition + transform.forward, transform.rotation);
             GameObject bull = Instantiate(bullet, Camera.main.transform.position + Camera.main.transform.forward/2, Camera.main.transform.rotation);
+            Debug.Log(Camera.main.transform.forward);
             bull.tag = "Bullet";
             Rigidbody rig = bull.GetComponent<Rigidbody>();
             rig.useGravity = false;
-            //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
-            //rig.AddForce((transform.forward + transform.up / 4) * 2.0f);
             rig.AddForce(cam.forward);
-            curtime = 0;
+            curtime = 0;        // Reset rate of fire timer
         }
 
+        if (grenadeThrown && nadeTime > fireRate)
+        {
+            Vector3 dir = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+            GameObject nade = Instantiate(grenade, Camera.main.transform.position + Camera.main.transform.forward/2, Camera.main.transform.rotation);
+            nade.tag = "Explosive";
+            Rigidbody rig = nade.GetComponent<Rigidbody>();
+            rig.useGravity = true;           
+            rig.AddForce(cam.forward);
+            nadeTime = 0;       // Reset nade throw timer
+        }
     }
 }
