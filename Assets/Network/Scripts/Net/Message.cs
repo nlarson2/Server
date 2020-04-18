@@ -86,7 +86,7 @@ namespace SmashDomeNetwork
 
         public static byte[] FloatToBytes(float num)
         {
-            num = num * 10;
+            num = num * 100;
             byte[] bytes = BitConverter.GetBytes((int)num);
             /*if (BitConverter.IsLittleEndian)
                 Array.Reverse(bytes);*/
@@ -97,7 +97,7 @@ namespace SmashDomeNetwork
         {
             //Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
             float num = BitConverter.ToInt32(bytes, 0);
-            return num / 10.0f;
+            return num / 100.0f;
         }
 
         public static byte[] Vec3ToBytes(UnityEngine.Vector3 vec)
@@ -369,6 +369,8 @@ namespace SmashDomeNetwork
     {
         public Vector3 pos;
         public int verticeLength = 0;
+        public int textureType = 0; // 0 defaults texture type to stone
+
         //using setter and getter to auto set length
         protected Vector3[] vertices;
         public Vector3[] Vertices
@@ -411,6 +413,7 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.textureType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.pos = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;
             this.verticeLength = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.vertices = new Vector3[this.verticeLength];
@@ -428,8 +431,10 @@ namespace SmashDomeNetwork
         public byte[] GetBytes()
         {
             byte[] msg = Base();
+            msg = Join(msg, IntToBytes(this.textureType));
             msg = Join(msg, Vec3ToBytes(this.pos));
             msg = Join(msg, IntToBytes(this.verticeLength));
+
             for (int i = 0; i < this.verticeLength; i++)
             {
                 msg = Join(msg, Vec3ToBytes(this.vertices[i]));

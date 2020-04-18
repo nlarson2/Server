@@ -76,7 +76,7 @@ public class Shoot : MonoBehaviour
             GameObject nade = Instantiate(grenade, Camera.main.transform.position + Camera.main.transform.forward/2, Camera.main.transform.rotation);
             nade.tag = "Explosive";
             Rigidbody rig = nade.GetComponent<Rigidbody>();
-            rig.useGravity = true;           
+            rig.useGravity = false;           
             rig.AddForce(cam.forward);
             nadeTime = 0;       // Reset nade throw timer
         }

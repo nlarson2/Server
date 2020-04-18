@@ -33,7 +33,7 @@ namespace SmashDomeVoxel
             public Vector3 end;
         }
 
-
+        public int textureType = 0; // Defaulted to stone
         int id; //id of model
         public int cubesInRow = 2;
         public float pieceSize = 0.2f;
@@ -661,6 +661,7 @@ namespace SmashDomeVoxel
             {
 
                 StructureChangeMsg outMsg = new StructureChangeMsg();
+                outMsg.textureType = this.textureType;
                 outMsg.pos = transform.position;
                 outMsg.Vertices = mesh.vertices;
                 outMsg.Triangles = mesh.triangles;
