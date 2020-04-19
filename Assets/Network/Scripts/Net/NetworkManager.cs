@@ -85,7 +85,7 @@ namespace SmashDomeNetwork
                 player.playerControl = player.obj.GetComponent<Player>();
                 users.Add(player.clientData.id, player);
                 player.obj.name = "NET_PLAYER_" + player.clientData.id;
-                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType());
+                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType(), (int)player.GetPersonType());
                 KeyValuePair<int, PlayerData>[] players = users.ToArray();
                 Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
                 foreach (KeyValuePair<int, PlayerData> playerData in players)
