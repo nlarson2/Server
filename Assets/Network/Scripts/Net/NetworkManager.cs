@@ -1,4 +1,4 @@
-﻿//For documentation on Net and Net.Socket (TcpClients, IPaddress, etc...)
+//For documentation on Net and Net.Socket (TcpClients, IPaddress, etc...)
 //https://docs.microsoft.com/en-us/dotnet/api/system.net?view=netframework-4.8
 
 
@@ -25,6 +25,8 @@ namespace SmashDomeNetwork
         protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
                                                                                                      // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
         public Dictionary<int, StructureChangeMsg> structures = new Dictionary<int, StructureChangeMsg>();
+
+        public Dictionary<int, Snapshot> netobjects = new Dictionary<int, Snapshot>();
 
         public GameObject playerPrefab;   //Networked player model
         public GameObject bulletPrefab;
@@ -303,8 +305,43 @@ namespace SmashDomeNetwork
             }
 
         }
-        private void Snapshot()
+        public void Snapshot(SnapshotMsg msg)
         {
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            {
+                //make changes to netobjects here to pos and rot only based on snapshot
+                UpdateNetObject(msg);
+                Debug.Log("NetObject");
+                msg.to = playerData.Value.clientData.id;
+                //Send(msg.GetBytes(), playerData.Value.clientData.id);
+            }
+        }
+        private void UpdateNetObject(SnapshotMsg msg)
+        {
+            try
+            {
+                for (int i = 0; i < msg.objID.Count; i++)
+                {
+                    if (netobjects[msg.objID[i]])
+                    {
+                        netobjects[msg.objID[i]].pos = msg.positions[i];
+                        netobjects[msg.objID[i]].rot = msg.rotation[i];
+                    }
+                }
+            } catch (Exception e) { Debug.Log("snapshot update error"); }
+        }
+        public void NetObject(NetObjectMsg msg)
+        {
+            //netobjects[msg.from] = (Snapshot)msg;
+            
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            {
+                Debug.Log("StructChange");
+                msg.to = playerData.Value.clientData.id;
+                //Send(msg.GetBytes(), playerData.Value.clientData.id);
+            }
 
         }
         private void Structure()
@@ -333,7 +370,11 @@ namespace SmashDomeNetwork
 
         private void SendSnapshot()
         {
-            while (true) {
+            while (true)
+            {
+                Dictionary<int, Vector3> lastPosition = new Dictionary<int, Vector3>(); //check if mem leak
+                Dictionary<int, Quaternion> lastAngle = new Dictionary<int, Quaternion>(); //check if mem leak
+
                 DateTime prevTime = DateTime.Now;
                 DateTime curTime;
                 double time = 0;
@@ -344,32 +385,42 @@ namespace SmashDomeNetwork
                     Debug.Log(time);
                     if (time > 0.2f)
                     {
-                        SnapshotMsg snapshot = new SnapshotMsg();
-                        List<ClientData> clients = new List<ClientData>();
-                        KeyValuePair<int, PlayerData>[] players = users.ToArray();
-                        foreach (KeyValuePair<int, PlayerData> playerKey in players)
+                        SnapshotMsg snapshot = new SnapshotMsg(0);
+                        KeyValuePair<int, Snapshot>[] objs = netobjects.ToArray();
+                        foreach (KeyValuePair<int, Snapshot> obj in objs)
                         {
-                            PlayerData playerData = playerKey.Value;
-                            Player playerController = playerData.playerControl;
-                            snapshot.userId.Add(playerData.clientData.id);
-                            snapshot.positions.Add(playerController.position);
-                            snapshot.rotation.Add(playerController.rotation);
-                            snapshot.camRotation.Add(playerController.cameratRotation);
-                            clients.Add(playerData.clientData);
+                            snapshot.objID.Add(obj.Value.objID);
+
+                            Vector3 pos = obj.Value.pos;
+                            snapshot.positions.Add(pos);
+
+                            Quaternion rot = obj.Value.rot;
+                            snapshot.rotation.Add(rot);
+
+                            snapshot.linear_speed.Add((pos - lastPosition[obj.Value.objID]) / (float)time);
+                            snapshot.linear_speed.Add(AngleShift(rot, lastAngle[obj.Value.objID]).eulerAngles / (float)time);
+
+
+                            lastPosition.Add(obj.Value.objID, pos);
+                            lastAngle.Add(obj.Value.objID, rot);
                         }
 
-                        //Send(clients.ToArray(), snapshot);
+                        Snapshot(snapshot);
                         time = 0;
                     }
                     prevTime = DateTime.Now;
+
+
+                    SpinWait.SpinUntil(() => users.Count > 1);
                 }
 
-                SpinWait.SpinUntil(() => users.Count > 1);
             }
-
         }
 
-
+        public Quaternion AngleShift(Quaternion prev, Quaternion now)
+        {
+            return (Quaternion.Inverse(prev) * now);
+        }
 
         public void print(string output)
         {
