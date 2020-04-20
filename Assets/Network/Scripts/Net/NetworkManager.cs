@@ -314,7 +314,7 @@ namespace SmashDomeNetwork
                 UpdateNetObject(msg);
                 Debug.Log("NetObject");
                 msg.to = playerData.Value.clientData.id;
-                //Send(msg.GetBytes(), playerData.Value.clientData.id);
+                Send(msg.GetBytes(), playerData.Value.clientData.id);
             }
         }
         private void UpdateNetObject(SnapshotMsg msg)
@@ -333,16 +333,27 @@ namespace SmashDomeNetwork
         }
         public void NetObject(NetObjectMsg msg)
         {
-            //netobjects[msg.from] = (Snapshot)msg;
+            //change to save many, hint: foreach like below
+            LoadNetObjects(msg);
             
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
                 Debug.Log("StructChange");
                 msg.to = playerData.Value.clientData.id;
-                //Send(msg.GetBytes(), playerData.Value.clientData.id);
+                Send(msg.GetBytes(), playerData.Value.clientData.id);
             }
-
+        }
+        private void LoadNetObjects(NetObjectMsg msg)
+        {
+            Snapshot snap = new Snapshot();
+            for (int i = 0; i < msg.objID.Count; i++)
+            {
+                snap.objID = msg.objID[i];
+                snap.pos = msg.positions[i];
+                snap.rot = msg.rotation[i];
+                netobjects.Add(snap.objID, snap);
+            }
         }
         private void Structure()
         {

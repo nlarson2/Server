@@ -414,8 +414,6 @@ namespace SmashDomeNetwork
         public List<Vector3> localScale = new List<Vector3>();
         public List<Vector3> positions = new List<Vector3>();
         public List<Quaternion> rotation = new List<Quaternion>();
-        public List<Vector3> linear_speed = new List<Vector3>();
-        public List<Quaternion> angular_speed = new List<Quaternion>();
 
         public NetObjectMsg(int objID)
         {
@@ -430,12 +428,12 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
-
             this.numId = BytesToInt(GetSegment(index, 4, bytes)); index += 4; //retrieves size of list
 
             for (int i = 0; i < numId; i++)
             {
                 objID.Add(BytesToInt(GetSegment(index, 4, bytes))); index += 4;
+                localScale.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
                 positions.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
                 rotation.Add(BytesToQuaternion(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
             }
@@ -448,6 +446,7 @@ namespace SmashDomeNetwork
             for (int i = 0; i < objID.Count; i++)
             {
                 msg = Join(msg, IntToBytes(objID[i]));
+                msg = Join(msg, Vec3ToBytes(localScale[i]));
                 msg = Join(msg, Vec3ToBytes(positions[i]));
                 msg = Join(msg, QuaternionToBytes(rotation[i]));
             }
