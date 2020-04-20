@@ -20,10 +20,10 @@ namespace SmashDomeNetwork
     public class NetworkManager : MonoBehaviour
     {
 
-        
+
         Server server;// = new Server(50000);
-        protected Dictionary<int, PlayerData> users =  new Dictionary<int, PlayerData>();            //hashtable of users
-                                                                                                     // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
+        protected Dictionary<int, PlayerData> users = new Dictionary<int, PlayerData>();            //hashtable of users
+                                                                                                    // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
         public Dictionary<int, StructureChangeMsg> structures = new Dictionary<int, StructureChangeMsg>();
 
         public Dictionary<int, Snapshot> netobjects = new Dictionary<int, Snapshot>();
@@ -77,7 +77,7 @@ namespace SmashDomeNetwork
 
         private void Update()
         {
-           
+
 
             while (instantiatePlayerQ.Count > 0)
             {
@@ -90,7 +90,7 @@ namespace SmashDomeNetwork
                 AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType());
                 KeyValuePair<int, PlayerData>[] players = users.ToArray();
                 Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
-                foreach (KeyValuePair<int,PlayerData> playerData in players)
+                foreach (KeyValuePair<int, PlayerData> playerData in players)
                 {
                     if (playerData.Value.clientData.id == player.clientData.id)
                         continue;
@@ -122,7 +122,7 @@ namespace SmashDomeNetwork
                 }
             }
 
-            while(removePlayerQ.Count > 0)
+            while (removePlayerQ.Count > 0)
             {
                 int player = removePlayerQ.Dequeue();
                 try
@@ -147,8 +147,8 @@ namespace SmashDomeNetwork
                     Debug.Log(e);
                 }
             }
-            
-            while(bulletQ.Count > 0)
+
+            while (bulletQ.Count > 0)
             {
                 Debug.Log("Gets here");
                 Debug.Log(bulletQ.Count);
@@ -159,8 +159,8 @@ namespace SmashDomeNetwork
                 // UPDATE HERE
 
                 GameObject bull = Instantiate(bulletPrefab, shootMsg.position, shootMsg.rotation);
-                
-                Rigidbody rig = bull.GetComponent<Rigidbody>();
+
+                /*Rigidbody rig = bull.GetComponent<Rigidbody>();
                 rig.useGravity = false;
                 //rig.AddForce(Physics.gravity * (rig.mass * rig.mass));
                 //rig.AddForce((transform.forward + transform.up / 4) * 2.0f);
@@ -168,12 +168,32 @@ namespace SmashDomeNetwork
 
                 //rig.AddForce(shootMsg.direction * speed);
                 rig.AddForce(shootMsg.direction * speed);
-                
-                
+                */
+
+                Vector3 rot = shootMsg.rotation.eulerAngles;
+                Vector3 fwd = shootMsg.position;
+                //fwd -= Vector3.forward;
+                //fwd = shootMsg.rotation * fwd;
+
+                fwd = shootMsg.rotation * Vector3.forward;
+                //fwd += shootMsg.position;
+
+
+
+
+                /*Vector3 lookToPosition = transform.position;
+                lookToPosition.y = (Mathf.Sin((rot.x % 360) * Mathf.Deg2Rad) * 100000);
+                lookToPosition.x = (Mathf.Sin((rot.y % 360) * Mathf.Deg2Rad) * 100000);*/
+                RaycastHit hit;
+                Physics.Raycast(shootMsg.position, fwd, out hit, 100.0f);
+                Debug.DrawRay(shootMsg.position, fwd * 20, Color.green, 5, false);
+                Debug.Log(string.Format("hit something? {0}", hit.transform.name));
+                hit.collider.gameObject.GetComponent<SmashDomeVoxel.VoxelModel>().Collide(hit.point);
+
                 Debug.Log("FIRED");
             }
         }
-        
+
         private void OnApplicationQuit()
         {
 
@@ -182,30 +202,30 @@ namespace SmashDomeNetwork
                 msgThread.Abort();
                 snapShot.Abort();
             }
-            catch( Exception e)
+            catch (Exception e)
             {
                 Debug.Log(e);
             }
-            foreach(PlayerData p in users.Values)
+            foreach (PlayerData p in users.Values)
             {
                 p.clientData.socket.Close();
             }
             server.listen.Stop();
         }
 
-        
+
         //thread continuely runs trying to pull messages form the server
         public void ReceiveMessages()
         {
             byte[] newMsg;
-           // Message msg;
+            // Message msg;
             while (true)
             {
                 newMsg = null;
                 while (server.msgQueue.Count > 0)
                 {
                     newMsg = server.msgQueue.Dequeue();
-                    
+
                     int msgType = Message.BytesToInt(Message.GetSegment(4, 4, newMsg));
                     switch ((MsgType)msgType)
                     {
@@ -224,7 +244,7 @@ namespace SmashDomeNetwork
                             MoveVR(newMsg);
                             break;
                         case MsgType.SHOOT:
-                            Shoot(newMsg);                            
+                            Shoot(newMsg);
                             break;
                         /*Shouldn't get any cases below this points*/
                         case MsgType.SNAPSHOT:
@@ -272,7 +292,7 @@ namespace SmashDomeNetwork
                 Debug.Log("Movement");
                 moveMsg.to = playerData.Value.clientData.id;
                 Send(msg, playerData.Value.clientData.id);
-                
+
             }
         }
         private void MoveVR(byte[] msg)
@@ -446,9 +466,9 @@ namespace SmashDomeNetwork
 
         public void print(string output)
         {
-            
+
             Debug.Log(String.Format(output));
-        
+
         }
 
         public void Send(byte[] msg, int to)
@@ -459,7 +479,7 @@ namespace SmashDomeNetwork
         }
         public void Send(ClientData[] clients, byte[] msg)
         {
-           // byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
+            // byte[] json = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(msg));
             server.SendMsg(clients, msg);
         }
 
