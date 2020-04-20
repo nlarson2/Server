@@ -102,7 +102,7 @@ namespace SmashDomeVoxel
                     }
                 }
             }
-            Debug.Log("DONE");
+            //Debug.Log("DONE");
         }
 
 

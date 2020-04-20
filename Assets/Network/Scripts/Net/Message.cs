@@ -41,7 +41,7 @@ namespace SmashDomeNetwork
         public virtual byte[] GetMessage()
         {
             string json = JsonUtility.ToJson(this);
-            Debug.Log(json);
+            //Debug.Log(json);
 
             return System.Text.ASCIIEncoding.ASCII.GetBytes(json);
         }
@@ -80,7 +80,7 @@ namespace SmashDomeNetwork
 
         public static int BytesToInt(byte[] bytes)
         {
-            //Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
+            ////Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
             return BitConverter.ToInt32(bytes, 0);
         }
 
@@ -95,7 +95,7 @@ namespace SmashDomeNetwork
 
         public static float BytesToFloat(byte[] bytes)
         {
-            //Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
+            ////Debug.Log(String.Format("NUMBYTES: {0}", bytes.Length));
             float num = BitConverter.ToInt32(bytes, 0);
             return num / 100.0f;
         }
@@ -140,7 +140,7 @@ namespace SmashDomeNetwork
 
         public static Quaternion BytesToQuaternion(byte[] bytes)
         {
-            Debug.Log(Quaternion.Euler(BytesToVec3(bytes)));
+            //Debug.Log(Quaternion.Euler(BytesToVec3(bytes)));
             return Quaternion.Euler(BytesToVec3(bytes));
 
         }
@@ -261,7 +261,7 @@ namespace SmashDomeNetwork
             msg = Join(msg, Vec3ToBytes(this.playerRotation.eulerAngles));
             msg = Join(msg, Vec3ToBytes(this.cameraRotation.eulerAngles));
             msg = FinishMsg(msg);
-            Debug.Log("GOT MOVE BYTES");
+            //Debug.Log("GOT MOVE BYTES");
             return msg;
         }
 
@@ -310,7 +310,7 @@ namespace SmashDomeNetwork
             msg = Join(msg, Vec3ToBytes(this.lHandRotation.eulerAngles));
             msg = Join(msg, Vec3ToBytes(this.rHandRotation.eulerAngles));
             msg = FinishMsg(msg);
-            Debug.Log("GOT MOVE BYTES");
+            //Debug.Log("GOT MOVE BYTES");
             return msg;
         }
 
