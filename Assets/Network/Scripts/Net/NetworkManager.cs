@@ -108,6 +108,18 @@ namespace SmashDomeNetwork
                     Debug.Log(String.Format("STRUCT SENT TO: {0}", structMsg.to));
                     Send(structMsg.GetBytes(), structMsg.to);
                 }
+                foreach (Snapshot snap in netobjects.Values)
+                {
+                    //Debug.Log(snap)
+
+                    NetObjectMsg netObjMsg = snap.ThisObj;
+                    //Debug.Log(netObjMsg.to);
+                    Debug.Log(player.clientData.id);
+                    //netObjMsg.to = player.clientData.id;
+                    //Debug.Log(String.Format("STRUCT SENT TO: {0}", netObjMsg.to));
+                    //Send(netObjMsg.GetBytes(), netObjMsg.to);
+                    Send(netObjMsg.GetBytes(), player.clientData.id);
+                }
             }
 
             while(removePlayerQ.Count > 0)
@@ -198,8 +210,7 @@ namespace SmashDomeNetwork
                     switch ((MsgType)msgType)
                     {
                         case MsgType.LOGIN:
-                            Login(newMsg);
-                            
+                            Login(newMsg);      
                             break;
                         case MsgType.LOGOUT:
                             Logout(newMsg);
@@ -305,50 +316,50 @@ namespace SmashDomeNetwork
             }
 
         }
-        public void Snapshot(SnapshotMsg msg)
+        public void SnapshotOut(Snapshot snap)
         {
+            netobjects[snap.objID] = snap;
+            
+            SnapshotMsg msg = new SnapshotMsg(snap.objID);
+            msg.objID.Add(snap.objID);
+            msg.positions.Add(snap.pos);
+            msg.rotation.Add(snap.rot);
+            msg.linear_speed.Add(snap.linear_speed);
+            msg.angular_speed.Add(snap.angular_speed);
+
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
                 //make changes to netobjects here to pos and rot only based on snapshot
-                UpdateNetObject(msg);
                 Debug.Log("NetObject");
                 msg.to = playerData.Value.clientData.id;
                 Send(msg.GetBytes(), playerData.Value.clientData.id);
             }
         }
-        private void UpdateNetObject(SnapshotMsg msg)
-        {
-            try
-            {
-                for (int i = 0; i < msg.objID.Count; i++)
-                {
-                    if (netobjects[msg.objID[i]])
-                    {
-                        netobjects[msg.objID[i]].pos = msg.positions[i];
-                        netobjects[msg.objID[i]].rot = msg.rotation[i];
-                    }
-                }
-            } catch (Exception e) { Debug.Log("snapshot update error"); }
-        }
+
         public void NetObject(NetObjectMsg msg)
         {
             //change to save many, hint: foreach like below
             LoadNetObjects(msg);
             
+            Debug.Log(msg.positions);
+
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                Debug.Log("StructChange");
+                Debug.Log("NetObject");
                 msg.to = playerData.Value.clientData.id;
                 Send(msg.GetBytes(), playerData.Value.clientData.id);
             }
         }
         private void LoadNetObjects(NetObjectMsg msg)
         {
-            Snapshot snap = new Snapshot();
+            Debug.Log(msg.objID.Count);
+
+
             for (int i = 0; i < msg.objID.Count; i++)
             {
+                Snapshot snap = new Snapshot();
                 snap.objID = msg.objID[i];
                 snap.pos = msg.positions[i];
                 snap.rot = msg.rotation[i];
@@ -416,7 +427,7 @@ namespace SmashDomeNetwork
                             lastAngle.Add(obj.Value.objID, rot);
                         }
 
-                        Snapshot(snapshot);
+                        //Snapshot(snapshot);
                         time = 0;
                     }
                     prevTime = DateTime.Now;

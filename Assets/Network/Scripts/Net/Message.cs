@@ -415,12 +415,12 @@ namespace SmashDomeNetwork
         public List<Vector3> positions = new List<Vector3>();
         public List<Quaternion> rotation = new List<Quaternion>();
 
-        public NetObjectMsg(int objID)
+        public NetObjectMsg(int _objID)
         {
             this.msgNum = seq++;
             if (seq > 2000000000) { seq = 1; }
             this.msgType = 9;
-            this.from = objID; //object ID
+            this.from = _objID; //object ID
         }
 
         public NetObjectMsg(byte[] bytes)
