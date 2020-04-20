@@ -32,12 +32,12 @@ public class Shoot : MonoBehaviour
         //IF E key pressed -> Throw Grenade
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Debug.Log("G is pressed");
+            //Debug.Log("G is pressed");
             grenadeThrown = true;
         }
         if (Input.GetKeyUp(KeyCode.E))
         {
-            Debug.Log("G is releasd");
+            //Debug.Log("G is releasd");
             grenadeThrown = false;
         }
 
@@ -52,9 +52,9 @@ public class Shoot : MonoBehaviour
                     // Draws raycast line in scene
                     // DrawRay   (start position,     end position,                         color,      duration of time )
                     Debug.DrawRay(transform.position, Camera.main.transform.forward * 10, Color.green, 10.0f);
-                    Debug.Log("You hit the " + hit.transform.name); // ensure you picked right object
+                    //Debug.Log("You hit the " + hit.transform.name); // ensure you picked right object
                     Vector3 pointOfCollision = hit.point;
-                    Debug.Log("Hit at point: " + pointOfCollision.ToString("F4"));
+                    //Debug.Log("Hit at point: " + pointOfCollision.ToString("F4"));
                 }
             }
 
@@ -62,7 +62,7 @@ public class Shoot : MonoBehaviour
         {
             Vector3 dir = new Vector3(transform.position.x, transform.position.y, transform.position.z);
             GameObject bull = Instantiate(bullet, Camera.main.transform.position + Camera.main.transform.forward/2, Camera.main.transform.rotation);
-            Debug.Log(Camera.main.transform.forward);
+            //Debug.Log(Camera.main.transform.forward);
             bull.tag = "Bullet";
             Rigidbody rig = bull.GetComponent<Rigidbody>();
             rig.useGravity = false;

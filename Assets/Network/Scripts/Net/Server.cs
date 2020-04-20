@@ -30,10 +30,10 @@ namespace SmashDomeNetwork
         
         public Server(int port)
         {
-            Debug.Log("BUILDING SERVER");
+            //Debug.Log("BUILDING SERVER");
             this.port = port; //50000
             listen = new TcpListener(IPAddress.Any, port);
-            Debug.Log("Listening on Port "+port.ToString());
+            //Debug.Log("Listening on Port "+port.ToString());
             idCount = 1; connectionCount = 0;
             
             //start thread to listen
@@ -56,7 +56,7 @@ namespace SmashDomeNetwork
             {
                 while (true)
                 {
-                    Debug.Log("Waiting on clients");
+                    //Debug.Log("Waiting on clients");
                     client = listen.AcceptTcpClient();
                     socket = client.Client;
                     stream = client.GetStream();
@@ -65,11 +65,12 @@ namespace SmashDomeNetwork
                     clientData = new ClientData(idCount++, socket, stream, ipAddress);
                     
                     connecting.Add(clientData.id, clientData);
-                    Debug.Log("Client Added");
+                    //Debug.Log("Client Added");
                     connectionCount++;
 
                     //This is where the login notification will go*******************************
                     LoginMsg msg = new LoginMsg(clientData.id);
+                    Debug.Log(string.Format("In Server: {0}", msg.from));
                     byte[] message = msg.GetBytes();
                     stream.Write(message, 0, message.Length);
 
@@ -79,7 +80,7 @@ namespace SmashDomeNetwork
             }
             catch (SocketException exception)
             {
-                Debug.Log(String.Format("SocketException: {0}", exception.ToString()));
+                //Debug.Log(String.Format("SocketException: {0}", exception.ToString()));
                 listen.Stop();
             }
             
@@ -121,7 +122,7 @@ namespace SmashDomeNetwork
                         }
                     }
                     msgQueue.Enqueue(message);
-                    //Debug.Log(message);*/
+                    ////Debug.Log(message);*/
                     /*byte[] sizeInBytes =
                     {
                         (byte)stream.ReadByte(),
@@ -130,9 +131,9 @@ namespace SmashDomeNetwork
                         (byte)stream.ReadByte()
 
                     };*/
-                    //Debug.Log("GOT SIZE");
+                    ////Debug.Log("GOT SIZE");
                     //int size = Message.BytesToInt(sizeInBytes);
-                    //Debug.Log(String.Format("SIZE: {0}", size));
+                    ////Debug.Log(String.Format("SIZE: {0}", size));
                     //if (size < 0) continue;
                     //byte[] msg = new byte[size];
                     List<byte> byteList = new List<byte>();
@@ -140,7 +141,7 @@ namespace SmashDomeNetwork
                     /*for (int i = 0; i < size; i++)
                     {
                         msg[i] = (byte)stream.ReadByte();
-                        Debug.Log("READING");
+                        //Debug.Log("READING");
                     }*/
                     while(delimCount<8)
                     {
@@ -150,11 +151,11 @@ namespace SmashDomeNetwork
                     }
                     if(byteList.Count > 16)
                         msgQueue.Enqueue(byteList.ToArray());
-                    Debug.Log("ENQUEUED");
+                    //Debug.Log("ENQUEUED");
                 }
                 catch (SocketException e)
                 {
-                    Debug.Log(e);
+                    //Debug.Log(e);
                 }
                 
             }
@@ -169,7 +170,7 @@ namespace SmashDomeNetwork
             }
             catch (SocketException e)
             {
-                Debug.Log(e.ToString());
+                //Debug.Log(e.ToString());
             }
         }
         
@@ -185,7 +186,7 @@ namespace SmashDomeNetwork
             }
             catch (SocketException e)
             {
-                Debug.Log(e.ToString());
+                //Debug.Log(e.ToString());
             }
         }
 

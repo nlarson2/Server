@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +25,7 @@ namespace SmashDomeNetwork
 
         //protected DateTime time = DateTime.Now;
         public static int seq = 1;
+        
         public static int snapSeq = 1;
         //default to 0 to avoid errors
         public int msgNum = 0;
@@ -174,6 +175,7 @@ namespace SmashDomeNetwork
     public class LoginMsg : Message
     {
         //constructor
+        public int personType = 0;
         public LoginMsg(int from, int playerType = 0)
         {
             this.msgNum = seq++;
@@ -186,15 +188,18 @@ namespace SmashDomeNetwork
         public LoginMsg(byte[] bytes)
         {
             //start at 8 for all because first 8 are seq num and msgtype
+            this.msgType = 1;
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.personType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
         }
         public byte[] GetBytes()
         {
             byte[] msg = Base();
             msg = Join(msg, IntToBytes(playerType));
+            msg = Join(msg, IntToBytes(personType));
             msg = FinishMsg(msg);
             return msg;
         }
@@ -340,7 +345,8 @@ namespace SmashDomeNetwork
 
             // UPDATE HERE
             // Took this from player message. I would think it'd need to be 16 because it's 4 floats, but the code in player rotation has 12 bytes. not sure why.
-            this.rotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//16 bytes (4 floats)
+            // It's 3 floats because of Euler angles.
+            this.rotation = Quaternion.Euler(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
 
         }
         public byte[] GetBytes()
@@ -402,53 +408,6 @@ namespace SmashDomeNetwork
                 msg = Join(msg, QuaternionToBytes(rotation[i]));
                 msg = Join(msg, Vec3ToBytes(linear_speed[i]));
                 msg = Join(msg, QuaternionToBytes(angular_speed[i]));
-            }
-            msg = FinishMsg(msg);
-            return msg;
-        }
-    }
-    public class NetObjectMsg : Message
-    {
-        public int numId;
-        public List<int> objID = new List<int>();
-        public List<Vector3> localScale = new List<Vector3>();
-        public List<Vector3> positions = new List<Vector3>();
-        public List<Quaternion> rotation = new List<Quaternion>();
-
-        public NetObjectMsg(int _objID)
-        {
-            this.msgNum = seq++;
-            if (seq > 2000000000) { seq = 1; }
-            this.msgType = 9;
-            this.from = _objID; //object ID
-        }
-
-        public NetObjectMsg(byte[] bytes)
-        {
-            int index = 8;
-            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
-            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
-            this.numId = BytesToInt(GetSegment(index, 4, bytes)); index += 4; //retrieves size of list
-
-            for (int i = 0; i < numId; i++)
-            {
-                objID.Add(BytesToInt(GetSegment(index, 4, bytes))); index += 4;
-                localScale.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
-                positions.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
-                rotation.Add(BytesToQuaternion(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
-            }
-        }
-
-        public byte[] GetBytes()
-        {
-            byte[] msg = Base();
-            msg = Join(msg, IntToBytes(objID.Count));
-            for (int i = 0; i < objID.Count; i++)
-            {
-                msg = Join(msg, IntToBytes(objID[i]));
-                msg = Join(msg, Vec3ToBytes(localScale[i]));
-                msg = Join(msg, Vec3ToBytes(positions[i]));
-                msg = Join(msg, QuaternionToBytes(rotation[i]));
             }
             msg = FinishMsg(msg);
             return msg;
@@ -541,7 +500,8 @@ namespace SmashDomeNetwork
 
     public class AddPlayerMsg : Message
     {
-        public AddPlayerMsg(int from, int playerType)
+        public int personType;
+        public AddPlayerMsg(int from, int playerType, int personType)
         {
             this.msgNum = seq++;
             //reset if it gets too high
@@ -549,6 +509,7 @@ namespace SmashDomeNetwork
             this.msgType = 8;
             this.from = from;
             this.playerType = playerType;
+            this.personType = personType;
         }
         public AddPlayerMsg(byte[] bytes)
         {
@@ -557,14 +518,65 @@ namespace SmashDomeNetwork
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.personType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
 
         }
         public byte[] GetBytes()
         {
             byte[] msg = Base();
             msg = Join(msg, IntToBytes(this.playerType));
+            msg = Join(msg, IntToBytes(this.personType));
             msg = FinishMsg(msg);
             return msg;
         }
+    }
+    public class NetObjectMsg : Message
+    {
+        public int numId;
+        public List<int> objID = new List<int>();
+        public List<Vector3> localScale = new List<Vector3>();
+        public List<Vector3> positions = new List<Vector3>();
+        public List<Quaternion> rotation = new List<Quaternion>();
+
+        public NetObjectMsg(int objID)
+        {
+            this.msgNum = seq++;
+            if (seq > 2000000000) { seq = 1; }
+            this.msgType = 9;
+            this.from = objID; //object ID
+        }
+
+        public NetObjectMsg(byte[] bytes)
+        {
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+
+            this.numId = BytesToInt(GetSegment(index, 4, bytes)); index += 4; //retrieves size of list
+
+            for (int i = 0; i < numId; i++)
+            {
+                objID.Add(BytesToInt(GetSegment(index, 4, bytes))); index += 4;
+                localScale.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
+                positions.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
+                rotation.Add(BytesToQuaternion(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
+            }
+        }
+
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, IntToBytes(objID.Count));
+            for (int i = 0; i < objID.Count; i++)
+            {
+                msg = Join(msg, IntToBytes(objID[i]));
+                msg = Join(msg, Vec3ToBytes(localScale[i]));
+                msg = Join(msg, Vec3ToBytes(positions[i]));
+                msg = Join(msg, QuaternionToBytes(rotation[i]));
+            }
+            msg = FinishMsg(msg);
+            return msg;
+        }
+
     }
 }

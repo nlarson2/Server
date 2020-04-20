@@ -87,25 +87,32 @@ namespace SmashDomeNetwork
                 player.playerControl = player.obj.GetComponent<Player>();
                 users.Add(player.clientData.id, player);
                 player.obj.name = "NET_PLAYER_" + player.clientData.id;
-                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType());
+                AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType(), (int)player.GetPersonType());
+                //addPlayerMsg = new AddPlayerMsg(addPlayerMsg.GetBytes());
+                Debug.Log(string.Format("Instantiate player: {0}", addPlayerMsg.playerType));
+
+
+
                 KeyValuePair<int, PlayerData>[] players = users.ToArray();
-                Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+                ////Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
                 foreach (KeyValuePair<int, PlayerData> playerData in players)
                 {
                     if (playerData.Value.clientData.id == player.clientData.id)
                         continue;
-                    Debug.Log("ADD USER SENT");
+                    ////Debug.Log("ADD USER SENT");
                     addPlayerMsg.from = player.clientData.id;
                     addPlayerMsg.to = playerData.Value.clientData.id;
                     Send(addPlayerMsg.GetBytes(), addPlayerMsg.to);
+
                     addPlayerMsg.from = playerData.Value.clientData.id;
                     addPlayerMsg.to = player.clientData.id;
+                    addPlayerMsg.personType = playerData.Value.clientData.personType;//test
                     Send(addPlayerMsg.GetBytes(), addPlayerMsg.to);
                 }
                 foreach (StructureChangeMsg structMsg in structures.Values)
                 {
                     structMsg.to = player.clientData.id;
-                    Debug.Log(String.Format("STRUCT SENT TO: {0}", structMsg.to));
+                   // //Debug.Log(String.Format("STRUCT SENT TO: {0}", structMsg.to));
                     Send(structMsg.GetBytes(), structMsg.to);
                 }
                 foreach (Snapshot snap in netobjects.Values)
@@ -144,14 +151,14 @@ namespace SmashDomeNetwork
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e);
+                    //Debug.Log(e);
                 }
             }
 
             while (bulletQ.Count > 0)
             {
-                Debug.Log("Gets here");
-                Debug.Log(bulletQ.Count);
+                ////Debug.Log("Gets here");
+                ////Debug.Log(bulletQ.Count);
                 ShootMsg shootMsg = bulletQ.Dequeue();
                 //waiting on bullets
                 //GameObject bull = Instantiate(bulletPrefab, shootMsg.position, Quaternion.identity);
@@ -187,10 +194,10 @@ namespace SmashDomeNetwork
                 RaycastHit hit;
                 Physics.Raycast(shootMsg.position, fwd, out hit, 100.0f);
                 Debug.DrawRay(shootMsg.position, fwd * 20, Color.green, 5, false);
-                Debug.Log(string.Format("hit something? {0}", hit.transform.name));
+                //Debug.Log(string.Format("hit something? {0}", hit.transform.name));
                 hit.collider.gameObject.GetComponent<SmashDomeVoxel.VoxelModel>().Collide(hit.point);
 
-                Debug.Log("FIRED");
+                //Debug.Log("FIRED");
             }
         }
 
@@ -204,7 +211,7 @@ namespace SmashDomeNetwork
             }
             catch (Exception e)
             {
-                Debug.Log(e);
+                //Debug.Log(e);
             }
             foreach (PlayerData p in users.Values)
             {
@@ -225,8 +232,10 @@ namespace SmashDomeNetwork
                 while (server.msgQueue.Count > 0)
                 {
                     newMsg = server.msgQueue.Dequeue();
+                    //Debug.Log(string.Format("MSG TYPE: {0}", new LoginMsg(newMsg).from));
 
                     int msgType = Message.BytesToInt(Message.GetSegment(4, 4, newMsg));
+                    Debug.Log(string.Format("MSG TYPE: {0}", msgType));
                     switch ((MsgType)msgType)
                     {
                         case MsgType.LOGIN:
@@ -234,13 +243,13 @@ namespace SmashDomeNetwork
                             break;
                         case MsgType.LOGOUT:
                             Logout(newMsg);
-                            Debug.Log("LOGGOUT");
+                            //Debug.Log("LOGGOUT");
                             break;
                         case MsgType.MOVE:
                             Move(newMsg);
                             break;
                         case MsgType.MOVEVR:
-                            Debug.Log("MOVEVR");
+                            //Debug.Log("MOVEVR");
                             MoveVR(newMsg);
                             break;
                         case MsgType.SHOOT:
@@ -264,8 +273,11 @@ namespace SmashDomeNetwork
             //pull new player off connectingUsers on the server and instantiate them into the game
             //LoginMsg loginMsg = JsonUtility.FromJson<LoginMsg>(msg);
             LoginMsg loginMsg = new LoginMsg(msg);
+            Debug.Log(string.Format("In NetMan: {0}", loginMsg.playerType));
             ClientData clientData = server.connecting[loginMsg.from];
             clientData.playerType = loginMsg.playerType;
+            clientData.personType = loginMsg.personType;
+            //Debug.Log(string.Format("LOGIN FROM: {0}", loginMsg.from));
             server.connecting.Remove(loginMsg.from);
             instantiatePlayerQ.Enqueue(clientData);
         }
@@ -277,22 +289,29 @@ namespace SmashDomeNetwork
         }
         private void Move(byte[] msg)
         {
-            // MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
-            MoveMsg moveMsg = new MoveMsg(msg);
-            Player playerController = users[moveMsg.from].playerControl;
-            playerController.position = moveMsg.pos;
-            playerController.rotation = moveMsg.playerRotation;
-            playerController.cameratRotation = moveMsg.cameraRotation;
-
-            KeyValuePair<int, PlayerData>[] players = users.ToArray();
-            Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
-            int countTest = 0;
-            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            try
             {
-                Debug.Log("Movement");
-                moveMsg.to = playerData.Value.clientData.id;
-                Send(msg, playerData.Value.clientData.id);
+                // MoveMsg moveMsg = JsonUtility.FromJson<MoveMsg>(msg);
+                MoveMsg moveMsg = new MoveMsg(msg);
+                //Debug.Log(string.Format("MOVE FROM: {0}", moveMsg.from));
+                Player playerController = users[moveMsg.from].playerControl;
+                playerController.position = moveMsg.pos;
+                playerController.rotation = moveMsg.playerRotation;
+                playerController.cameratRotation = moveMsg.cameraRotation;
 
+                KeyValuePair<int, PlayerData>[] players = users.ToArray();
+                //Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+                int countTest = 0;
+                foreach (KeyValuePair<int, PlayerData> playerData in players)
+                {
+                    //Debug.Log("Movement");
+                    moveMsg.to = playerData.Value.clientData.id;
+                    Send(msg, playerData.Value.clientData.id);
+
+                }
+            } catch (Exception e)
+            {
+                Debug.Log("SKIPPED");
             }
         }
         private void MoveVR(byte[] msg)
@@ -309,11 +328,11 @@ namespace SmashDomeNetwork
             playerController.rHandRot = moveMsg.rHandRotation;
 
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
-            Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+            //Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
             int countTest = 0;
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                Debug.Log("Movement");
+                //Debug.Log("Movement");
                 moveMsg.to = playerData.Value.clientData.id;
                 Send(msg, playerData.Value.clientData.id);
 
@@ -325,11 +344,11 @@ namespace SmashDomeNetwork
             ShootMsg shoot = new ShootMsg(msg);
             bulletQ.Enqueue(shoot);
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
-            Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
+            //Debug.Log(String.Format("PLAYERS LENGTH: {0}: ", players.Length));
             int countTest = 0;
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                Debug.Log("Movement");
+                //Debug.Log("Movement");
                 shoot.to = playerData.Value.clientData.id;
                 Send(msg, playerData.Value.clientData.id);
 
@@ -404,7 +423,7 @@ namespace SmashDomeNetwork
             KeyValuePair<int, PlayerData>[] players = users.ToArray();
             foreach (KeyValuePair<int, PlayerData> playerData in players)
             {
-                Debug.Log("StructChange");
+                //Debug.Log("StructChange");
                 msg.to = playerData.Value.clientData.id;
                 Send(msg.GetBytes(), playerData.Value.clientData.id);
             }
@@ -424,7 +443,7 @@ namespace SmashDomeNetwork
                 {
                     curTime = DateTime.Now;
                     time += (curTime - prevTime).TotalSeconds;
-                    Debug.Log(time);
+                    //Debug.Log(time);
                     if (time > 0.2f)
                     {
                         SnapshotMsg snapshot = new SnapshotMsg(0);
@@ -467,7 +486,7 @@ namespace SmashDomeNetwork
         public void print(string output)
         {
 
-            Debug.Log(String.Format(output));
+            //Debug.Log(String.Format(output));
 
         }
 

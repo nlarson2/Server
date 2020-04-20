@@ -22,6 +22,9 @@ namespace SmashDomeNetwork {
         {
             return clientData.playerType;
         }
-        
+        public int GetPersonType()
+        {
+            return clientData.personType;
+        }
     }
 }
