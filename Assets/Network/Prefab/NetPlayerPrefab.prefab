@@ -273,7 +273,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 4338089575560985838}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5
   m_Height: 2
   m_Direction: 1
@@ -288,9 +288,10 @@ GameObject:
   m_Component:
   - component: {fileID: 5827301040639582268}
   - component: {fileID: 334772006157757215}
+  - component: {fileID: 2503281295151455399}
   m_Layer: 0
   m_Name: NetPlayerPrefab
-  m_TagString: Untagged
+  m_TagString: NetPlayer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -335,6 +336,21 @@ MonoBehaviour:
   lHand: {fileID: 31094806952485329}
   rHand: {fileID: 1730722900742091697}
   body: {fileID: 4338089575560985838}
+  id: 0
+--- !u!136 &2503281295151455399
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6488846320004811125}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 2.01
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7485720032206910212
 GameObject:
   m_ObjectHideFlags: 0

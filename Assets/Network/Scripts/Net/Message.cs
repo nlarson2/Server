@@ -17,7 +17,8 @@ namespace SmashDomeNetwork
         SNAPSHOT = 6,
         STRUCTURE = 7,
         ADDPLAYER = 8,
-        NETOBJECT = 9
+        NETOBJECT = 9,
+        RESPAWN = 10
     }
 
     public class Message
@@ -68,7 +69,7 @@ namespace SmashDomeNetwork
         // used to append the size of the message to the front of the msg
         public byte[] FinishMsg(byte[] bytes)
         {
-            byte[] delim = { (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n' };
+            byte[] delim = { (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n', (byte)'\n' };
             return Join(bytes, delim);
         }
 
@@ -324,6 +325,7 @@ namespace SmashDomeNetwork
     {
         public Vector3 position;
         public Vector3 direction;
+        public int shootType = 0;
         public Quaternion rotation;
         public ShootMsg(int from)
         {
@@ -339,6 +341,7 @@ namespace SmashDomeNetwork
             int index = 8;
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.shootType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             //this.playerType = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
             this.position = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
             this.direction = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
@@ -352,6 +355,7 @@ namespace SmashDomeNetwork
         public byte[] GetBytes()
         {
             byte[] msg = Base();
+            msg = Join(msg, IntToBytes(this.shootType));
             msg = Join(msg, Vec3ToBytes(this.position));
             msg = Join(msg, Vec3ToBytes(this.direction));
             msg = Join(msg, Vec3ToBytes(this.rotation.eulerAngles));
@@ -579,4 +583,34 @@ namespace SmashDomeNetwork
         }
 
     }
+
+    public class RespawnMsg : Message
+    {
+        public Vector3 pos;
+
+        public RespawnMsg()
+        {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
+            this.msgType = 10;
+        }
+        public RespawnMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+            this.pos = BytesToVec3(GetSegment(index, 12, bytes)); index += 12;//12 bytes (3 floats)
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = Join(msg, Vec3ToBytes(this.pos));
+            msg = FinishMsg(msg);
+            Debug.Log("GOT MOVE BYTES");
+            return msg;
+        }
+    }
 }
+

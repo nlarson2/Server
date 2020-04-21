@@ -22,6 +22,7 @@ public class Player : MonoBehaviour
     public GameObject rHand;
     public GameObject body;
 
+    public int id;
 
    
     // Update is called once per frame
@@ -61,4 +62,14 @@ public class Player : MonoBehaviour
                 rHand.transform.eulerAngles = rHandRot.eulerAngles;
         }
     }
+
+    public void Shot()
+    {
+        Debug.Log("PLAYER GOT SHOT");
+        RespawnMsg respawnMsg = new RespawnMsg();
+        respawnMsg.to = this.id;
+        respawnMsg.pos = new Vector3(12.0f, 3.0f, 12.0f);
+        networkManager.Send(respawnMsg.GetBytes(), this.id);
+    }
+   
 }

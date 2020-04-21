@@ -85,6 +85,7 @@ namespace SmashDomeNetwork
                 PlayerData player = new PlayerData(instantiatePlayerQ.Dequeue());
                 player.obj = Instantiate(playerPrefab, spawnpoint.position, spawnpoint.rotation, parent);
                 player.playerControl = player.obj.GetComponent<Player>();
+                player.playerControl.id = player.clientData.id;
                 users.Add(player.clientData.id, player);
                 player.obj.name = "NET_PLAYER_" + player.clientData.id;
                 AddPlayerMsg addPlayerMsg = new AddPlayerMsg(player.clientData.id, (int)player.GetPlayerType(), (int)player.GetPersonType());
@@ -195,7 +196,15 @@ namespace SmashDomeNetwork
                 Physics.Raycast(shootMsg.position, fwd, out hit, 100.0f);
                 Debug.DrawRay(shootMsg.position, fwd * 20, Color.green, 5, false);
                 //Debug.Log(string.Format("hit something? {0}", hit.transform.name));
-                hit.collider.gameObject.GetComponent<SmashDomeVoxel.VoxelModel>().Collide(hit.point);
+                GameObject hitObj = hit.collider.gameObject;
+                if(hitObj.tag=="Model")
+                    hitObj.GetComponent<SmashDomeVoxel.VoxelModel>().Collide(hit.point, shootMsg.shootType);
+                Debug.Log(hitObj.tag);
+                if (hitObj.tag == "NetPlayer")
+                {
+                    Debug.Log("Player Got Shot In Network Manager");
+                    hitObj.GetComponent<Player>().Shot();
+                }
 
                 //Debug.Log("FIRED");
             }
@@ -233,34 +242,41 @@ namespace SmashDomeNetwork
                 {
                     newMsg = server.msgQueue.Dequeue();
                     //Debug.Log(string.Format("MSG TYPE: {0}", new LoginMsg(newMsg).from));
-
-                    int msgType = Message.BytesToInt(Message.GetSegment(4, 4, newMsg));
-                    Debug.Log(string.Format("MSG TYPE: {0}", msgType));
-                    switch ((MsgType)msgType)
+                    try
                     {
-                        case MsgType.LOGIN:
-                            Login(newMsg);      
-                            break;
-                        case MsgType.LOGOUT:
-                            Logout(newMsg);
-                            //Debug.Log("LOGGOUT");
-                            break;
-                        case MsgType.MOVE:
-                            Move(newMsg);
-                            break;
-                        case MsgType.MOVEVR:
-                            //Debug.Log("MOVEVR");
-                            MoveVR(newMsg);
-                            break;
-                        case MsgType.SHOOT:
-                            Shoot(newMsg);
-                            break;
-                        /*Shouldn't get any cases below this points*/
-                        case MsgType.SNAPSHOT:
-                            break;
-                        case MsgType.STRUCTURE:
-                            break;
+                        int msgType = Message.BytesToInt(Message.GetSegment(4, 4, newMsg));
+                   
+                        Debug.Log(string.Format("MSG TYPE: {0}", msgType));
+                        switch ((MsgType)msgType)
+                        {
+                            case MsgType.LOGIN:
+                                Login(newMsg);      
+                                break;
+                            case MsgType.LOGOUT:
+                                Logout(newMsg);
+                                //Debug.Log("LOGGOUT");
+                                break;
+                            case MsgType.MOVE:
+                                Move(newMsg);
+                                break;
+                            case MsgType.MOVEVR:
+                                //Debug.Log("MOVEVR");
+                                MoveVR(newMsg);
+                                break;
+                            case MsgType.SHOOT:
+                                Shoot(newMsg);
+                                break;
+                            /*Shouldn't get any cases below this points*/
+                            case MsgType.SNAPSHOT:
+                                break;
+                            case MsgType.STRUCTURE:
+                                break;
 
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.Log(newMsg);
                     }
                 }
                 //wait for a message to be on the queue and then restart the loop

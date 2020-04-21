@@ -556,7 +556,7 @@ namespace SmashDomeVoxel
             }
         }
         //private void OnCollisionEnter(Collision collision)
-        public void Collide(Vector3 contact)
+        public void Collide(Vector3 contact, int shootType)
         {
             //This logic verifies that in order to destroy part of the model, the object colliding with the model must be a bullet (with tag = "Bullet")
             //if (collision.gameObject.tag == "Bullet" || collision.gameObject.tag == "Explosive")
@@ -660,14 +660,15 @@ namespace SmashDomeVoxel
                         // Otherwise, we found a breakable voxel, so we need to set that voxel to null and exit loop by setting voxelFound = true
                         else if (voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] != null)
                         {
-                            /* if (collision.gameObject.tag == "Bullet")
-                             {*/
-                            voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
-                            //}
-                            //else if (collision.gameObject.tag == "Explosive")
-                            // {
-                            //    explosionRadius(deleteCoords[0], deleteCoords[1], deleteCoords[2]);
-                            //}
+                            if (shootType == 0)
+                            {
+                                voxel[deleteCoords[0], deleteCoords[1], deleteCoords[2]] = null;
+                            }
+                            else if (shootType == 1)
+                            {
+                                explosionRadius(deleteCoords[0], deleteCoords[1], deleteCoords[2]);
+                            }
+                            voxelFound = true;
                             voxelFound = true;
                         }
                     }
