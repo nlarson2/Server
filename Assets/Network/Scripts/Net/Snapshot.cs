@@ -17,7 +17,9 @@ namespace SmashDomeNetwork {
         public Vector3 linear_speed;
         public Quaternion angular_speed;
         public int objID;
+        public int textureType = 0;
         public NetObjectMsg ThisObj;
+        public bool hasMoved = false;
         // Start is called before the first frame update
         void Start()
         {  
@@ -49,23 +51,25 @@ namespace SmashDomeNetwork {
             {
                 this.objID = count++;//netManager.netobjects.Count;
                 ThisObj = new NetObjectMsg(objID);
-                ThisObj.objID.Add(objID);
-                ThisObj.localScale.Add(scale);
-                ThisObj.positions.Add(pos);
-                ThisObj.rotation.Add(rot);
+                ThisObj.objID = (objID);
+                ThisObj.textureType = (this.textureType);
+                ThisObj.positions = (pos);
+                ThisObj.rotation = (rot);
                 netManager.NetObject(ThisObj);
                 first = false;
             }
 
 
 
-            if (pos != transform.position)
+            if (Moved(pos, transform.position))
             {/*
                 if (Vector3.Distance(pos, transform.position) > 10.0f)
                     transform.position = pos;
                 else
                     transform.position = Vector3.MoveTowards(transform.position, pos, Time.deltaTime * speed);*/
+                hasMoved = true;
                 pos = transform.position;
+                ThisObj.positions = pos;
                 ChangeSnapshot();
             }
             if (rot != transform.rotation)
@@ -73,15 +77,27 @@ namespace SmashDomeNetwork {
                 //transform.eulerAngles = rot.eulerAngles;
                 //transform.rotation = Quaternion.Slerp(transform.rotation, rot, 0.1f);
                 rot = transform.rotation;
+                ThisObj.rotation = rot;
                 ChangeSnapshot();
             }
         }
 
         void ChangeSnapshot()
         {
-            Debug.Log("SnapshotChange");
-            Debug.Log(string.Format("Pos: {0}", this.pos));
+            //Debug.Log("SnapshotChange");
+            //Debug.Log(string.Format("Pos: {0}", this.pos));
             netManager.SnapshotOut(this);
+        }
+        private float eps = 0.0000001f;
+        bool Moved(Vector3 p1, Vector3 p2)
+        {   
+            if (Mathf.Abs(p1.x - p2.x) > eps)
+                return true;
+            if (Mathf.Abs(p1.y - p2.y) > eps)
+                return true;
+            if (Mathf.Abs(p1.z - p2.z) > eps)
+                return true;
+            return false;
         }
     }
 }

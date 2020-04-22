@@ -369,6 +369,7 @@ namespace SmashDomeNetwork
     {
     	public int numId;
         public List<int> objID = new List<int>();
+        public List<int> textureType = new List<int>();
         public List<Vector3> positions = new List<Vector3>();
         public List<Quaternion> rotation = new List<Quaternion>();
         public List<Vector3> linear_speed = new List<Vector3>();
@@ -394,6 +395,7 @@ namespace SmashDomeNetwork
             for (int i = 0; i < numId; i++) 
             {
                 objID.Add(BytesToInt(GetSegment(index, 4 , bytes))); index += 4;
+                textureType.Add(BytesToInt(GetSegment(index, 4, bytes))); index += 4;
                 positions.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
                 rotation.Add(BytesToQuaternion(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
                 linear_speed.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
@@ -408,6 +410,7 @@ namespace SmashDomeNetwork
             for (int i = 0; i < objID.Count; i++)
             {
                 msg = Join(msg, IntToBytes(objID[i]));
+                msg = Join(msg, IntToBytes(textureType[i]));
                 msg = Join(msg, Vec3ToBytes(positions[i]));
                 msg = Join(msg, QuaternionToBytes(rotation[i]));
                 msg = Join(msg, Vec3ToBytes(linear_speed[i]));
@@ -534,13 +537,15 @@ namespace SmashDomeNetwork
             return msg;
         }
     }
+
     public class NetObjectMsg : Message
     {
         public int numId;
-        public List<int> objID = new List<int>();
-        public List<Vector3> localScale = new List<Vector3>();
-        public List<Vector3> positions = new List<Vector3>();
-        public List<Quaternion> rotation = new List<Quaternion>();
+        public int objID;
+        public int textureType;
+        public Vector3 localScale;
+        public Vector3 positions;
+        public Quaternion rotation;
 
         public NetObjectMsg(int objID)
         {
@@ -556,28 +561,23 @@ namespace SmashDomeNetwork
             this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
             this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
 
-            this.numId = BytesToInt(GetSegment(index, 4, bytes)); index += 4; //retrieves size of list
+            //this.numId = BytesToInt(GetSegment(index, 4, bytes)); index += 4; //retrieves size of list
 
-            for (int i = 0; i < numId; i++)
-            {
-                objID.Add(BytesToInt(GetSegment(index, 4, bytes))); index += 4;
-                localScale.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
-                positions.Add(BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
-                rotation.Add(BytesToQuaternion(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
-            }
+            objID = (BytesToInt(GetSegment(index, 4, bytes))); index += 4;
+            textureType = (BytesToInt(GetSegment(index, 4, bytes))); index += 4;
+            positions = (BytesToVec3(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
+            rotation = (BytesToQuaternion(GetSegment(index, 12, bytes))); index += 12;//12 bytes (3 floats)
         }
 
         public byte[] GetBytes()
         {
             byte[] msg = Base();
-            msg = Join(msg, IntToBytes(objID.Count));
-            for (int i = 0; i < objID.Count; i++)
-            {
-                msg = Join(msg, IntToBytes(objID[i]));
-                msg = Join(msg, Vec3ToBytes(localScale[i]));
-                msg = Join(msg, Vec3ToBytes(positions[i]));
-                msg = Join(msg, QuaternionToBytes(rotation[i]));
-            }
+            
+            //Debug.Log(string.Format("IN THE MESSAGE {0}", this.objID));
+            msg = Join(msg, IntToBytes(objID));
+            msg = Join(msg, IntToBytes(textureType));
+            msg = Join(msg, Vec3ToBytes(positions));
+            msg = Join(msg, QuaternionToBytes(rotation));
             msg = FinishMsg(msg);
             return msg;
         }

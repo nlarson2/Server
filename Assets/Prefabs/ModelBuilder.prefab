@@ -123,6 +123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eeebc9389782774ea274e41fe7650ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  textureType: 0
   cubesInRow: 2
   pieceSize: 0.2
   size: 0
@@ -132,3 +133,4 @@ MonoBehaviour:
   inputfile: Assets/Text.txt
   collided: 0
   explosionPrefab: {fileID: 0}
+  netCube: {fileID: 4249856934474775466, guid: 75824c6740cdf7040b63b33f1d1f72d2, type: 3}

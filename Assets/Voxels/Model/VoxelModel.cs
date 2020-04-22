@@ -556,7 +556,7 @@ namespace SmashDomeVoxel
             }
         }
         //private void OnCollisionEnter(Collision collision)
-        public void Collide(Vector3 contact, int shootType)
+        public int Collide(Vector3 contact, int shootType)
         {
             //This logic verifies that in order to destroy part of the model, the object colliding with the model must be a bullet (with tag = "Bullet")
             //if (collision.gameObject.tag == "Bullet" || collision.gameObject.tag == "Explosive")
@@ -692,7 +692,7 @@ namespace SmashDomeVoxel
                                                //collision.gameObject.GetComponent<Rigidbody>().useGravity = false;
                                                //collision.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
                                                //collision.gameObject.GetComponent<Collider>().enabled = false;
-
+            return textureType;
         }
 
 
