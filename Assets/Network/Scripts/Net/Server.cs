@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SmashDomeNetwork
 {
@@ -32,7 +33,14 @@ namespace SmashDomeNetwork
         {
             //Debug.Log("BUILDING SERVER");
             this.port = port; //50000
-            listen = new TcpListener(IPAddress.Any, port);
+            try
+            {
+                listen = new TcpListener(IPAddress.Any, port);
+            }
+            catch
+            {
+                SceneManager.LoadScene(0);
+            }
             //Debug.Log("Listening on Port "+port.ToString());
             idCount = 1; connectionCount = 0;
             
