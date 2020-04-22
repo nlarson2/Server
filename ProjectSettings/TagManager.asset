@@ -8,6 +8,7 @@ TagManager:
   - Model
   - Bullet
   - Explosive
+  - NetPlayer
   layers:
   - Default
   - TransparentFX

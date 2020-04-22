@@ -32,10 +32,13 @@ namespace SmashDomeNetwork
         public GameObject bulletPrefab;
         public Transform parent;          //Location in hierarchy
         public Transform spawnpoint;       //Spawn point in world
+        public GameObject netCube;
 
         Queue<ClientData> instantiatePlayerQ = new Queue<ClientData>();
         Queue<int> removePlayerQ = new Queue<int>();
         Queue<ShootMsg> bulletQ = new Queue<ShootMsg>();
+
+
 
         Thread msgThread; //thread to receive messages continuously
         Thread snapShot;
@@ -197,8 +200,11 @@ namespace SmashDomeNetwork
                 Debug.DrawRay(shootMsg.position, fwd * 20, Color.green, 5, false);
                 //Debug.Log(string.Format("hit something? {0}", hit.transform.name));
                 GameObject hitObj = hit.collider.gameObject;
-                if(hitObj.tag=="Model")
+                if (hitObj.tag == "Model")
+                {
                     hitObj.GetComponent<SmashDomeVoxel.VoxelModel>().Collide(hit.point, shootMsg.shootType);
+                    Instantiate(netCube, hit.point, Quaternion.identity);
+                }
                 Debug.Log(hitObj.tag);
                 if (hitObj.tag == "NetPlayer")
                 {

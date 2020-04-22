@@ -814,6 +814,7 @@ namespace SmashDomeVoxel
             {
                 StructureChangeMsg outMsg = new StructureChangeMsg();
                 outMsg.from = this.id;
+                outMsg.textureType = this.textureType;
                 outMsg.pos = transform.position;
                 outMsg.Vertices = mesh.vertices;
                 outMsg.Triangles = mesh.triangles;
