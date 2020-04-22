@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4249856933161055800}
   m_Layer: 0
   m_Name: NetCube
-  m_TagString: Untagged
+  m_TagString: Net Cube
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -50,21 +50,30 @@ namespace SmashDomeVoxel
         List<int> triangles = new List<int>();
         Mesh mesh;
         bool meshed = false;
-
+        bool meshChanged = false;
+        string[] lines;
         void Start()
         {
+            meshed = false;
+            meshChanged = true;
             cubesPivotDistance = pieceSize * cubesInRow / 2;
             cubesPivot = new Vector3(cubesPivotDistance, cubesPivotDistance, cubesPivotDistance);
 
             mesh = new Mesh();
             GetComponent<MeshFilter>().mesh = mesh;
 
-            string[] lines = File.ReadAllLines(this.inputfile);
+            lines = File.ReadAllLines(this.inputfile);
             string size = lines[0], scale = lines[1];
             this.scale = 1.0f;
             Int32.TryParse(size, out this.size);
             float.TryParse(scale, out this.scale);
             voxelArraySize = (int)Math.Pow(2, this.size);
+            InitialSetup();
+        }
+        private void InitialSetup()
+        {
+            Debug.Log("ReStartingMesh");
+            
 
 
             //New cube order -> [height, width, depth]
@@ -107,6 +116,8 @@ namespace SmashDomeVoxel
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             myMC.sharedMesh = mesh;
+            resetMesh();
+            rebuildMesh();
             ////Debug.Log(string.Format("VERTS: {0}  TRIS: {1}", mesh.vertexCount, mesh.vertexCount / 2));
             meshed = true;
         }
@@ -736,8 +747,7 @@ namespace SmashDomeVoxel
 
 
         }
-
-        bool meshChanged = false;
+        
         void Update()
         {
             if (this.netManager == null)
@@ -747,7 +757,7 @@ namespace SmashDomeVoxel
             }
 
             //Right click for raycasting. Rays are visible in Scene Editor
-            if (Input.GetMouseButtonDown(1))
+           /* if (Input.GetMouseButtonDown(1))
             {
                 ////Debug.Log("Got here");
                 RaycastHit hit;
@@ -770,7 +780,7 @@ namespace SmashDomeVoxel
                     Vector3 pointOfCollision = hit.point;
                     ////Debug.Log("Hit at point: " + pointOfCollision.ToString("F4"));
                 }
-            }
+            }*/
 
             //if (timer < waitTime)
             //{
@@ -883,6 +893,19 @@ namespace SmashDomeVoxel
                 voxel[y - 1, x + i + 1, z + i] = null;
 
             }
+        }
+        public void ResetVoxel()
+        {
+           
+            InitialSetup();
+            StructureChangeMsg outMsg = new StructureChangeMsg();
+            outMsg.from = this.id;
+            outMsg.textureType = this.textureType;
+            outMsg.pos = transform.position;
+            outMsg.Vertices = mesh.vertices;
+            outMsg.Triangles = mesh.triangles;
+            netManager.ChangeModel(outMsg);
+            meshChanged = false;
         }
 
     }

@@ -20,7 +20,7 @@ namespace SmashDomeNetwork
     public class NetworkManager : MonoBehaviour
     {
 
-
+        GameManager gameManger;
         Server server;// = new Server(50000);
         protected Dictionary<int, PlayerData> users = new Dictionary<int, PlayerData>();            //hashtable of users
                                                                                                     // protected Dictionary<int, ClientData> connectingUsers =  new Dictionary<int, ClientData>();  //hashtable of users that havent finished connecting
@@ -75,6 +75,7 @@ namespace SmashDomeNetwork
 
         private void Start()
         {
+            gameManger = GameObject.Find("Game Manager").GetComponent<GameManager>();
             serverData = GameObject.Find("PassingData").GetComponent<StoredServerData>();
             port = serverData.parsedPortNumber;
             serverData.Destory();
@@ -173,12 +174,14 @@ namespace SmashDomeNetwork
                 ////Debug.Log("Gets here");
                 ////Debug.Log(bulletQ.Count);
                 ShootMsg shootMsg = bulletQ.Dequeue();
+                if (!gameManger.IsWorldBreakable())
+                    continue;
                 //waiting on bullets
                 //GameObject bull = Instantiate(bulletPrefab, shootMsg.position, Quaternion.identity);
 
                 // UPDATE HERE
 
-                GameObject bull = Instantiate(bulletPrefab, shootMsg.position, shootMsg.rotation);
+                //GameObject bull = Instantiate(bulletPrefab, shootMsg.position, shootMsg.rotation);
 
                 /*Rigidbody rig = bull.GetComponent<Rigidbody>();
                 rig.useGravity = false;
@@ -628,5 +631,26 @@ namespace SmashDomeNetwork
             server.listen.Stop();
         }
 
+        public void ResetGame()
+        {
+            ResetMsg resetMsg = new ResetMsg();
+            byte[] output = resetMsg.GetBytes();
+            KeyValuePair<int, PlayerData>[] players = users.ToArray();
+            foreach (KeyValuePair<int, PlayerData> playerData in players)
+            {
+                playerData.Value.playerControl.Shot();
+                Send(output, playerData.Value.clientData.id);
+                Debug.Log("RESET MSG SENT");
+            }
+            GameObject[] cubes = GameObject.FindGameObjectsWithTag("Net Cube");
+            foreach (GameObject cube in cubes)
+            {
+                GameObject.Destroy(cube);
+                //Destroy(cube);
+                //Destroy(netobject.gameObject);
+                //netobjects.Remove(netobject.objID);
+            }
+            netobjects = new Dictionary<int, Snapshot>();
+        }
     }
 }

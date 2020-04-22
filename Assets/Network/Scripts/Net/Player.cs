@@ -7,6 +7,7 @@ public class Player : MonoBehaviour
 {
 
     NetworkManager networkManager = NetworkManager.Instance;
+    GameManager gameManager;
 
     public float speed = 10.0f;
 
@@ -21,13 +22,20 @@ public class Player : MonoBehaviour
     public GameObject lHand;
     public GameObject rHand;
     public GameObject body;
-
     public int id;
-
-   
+    public bool firstRun = true;
+    private void Start()
+    {
+        gameManager = GameObject.Find("Game Manager").GetComponent<GameManager>();
+    }
     // Update is called once per frame
     void Update()
     {
+        if (firstRun)
+        {
+            Shot();
+            firstRun = false;
+        }
         
         if (position != transform.position)
         {
@@ -68,7 +76,7 @@ public class Player : MonoBehaviour
         Debug.Log("PLAYER GOT SHOT");
         RespawnMsg respawnMsg = new RespawnMsg();
         respawnMsg.to = this.id;
-        respawnMsg.pos = new Vector3(12.0f, 3.0f, 12.0f);
+        respawnMsg.pos = gameManager.GetRespawnPoint();
         networkManager.Send(respawnMsg.GetBytes(), this.id);
     }
    

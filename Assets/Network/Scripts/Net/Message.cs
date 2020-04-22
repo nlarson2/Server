@@ -18,7 +18,8 @@ namespace SmashDomeNetwork
         STRUCTURE = 7,
         ADDPLAYER = 8,
         NETOBJECT = 9,
-        RESPAWN = 10
+        RESPAWN = 10,
+        RESET = 11
     }
 
     public class Message
@@ -608,7 +609,30 @@ namespace SmashDomeNetwork
             byte[] msg = Base();
             msg = Join(msg, Vec3ToBytes(this.pos));
             msg = FinishMsg(msg);
-            Debug.Log("GOT MOVE BYTES");
+            return msg;
+        }
+    }
+
+    public class ResetMsg : Message
+    {
+        public ResetMsg()
+        {
+            this.msgNum = seq++;
+            //reset if it gets too high
+            if (seq > 2000000000) { seq = 1; }
+            this.msgType = 11;
+        }
+        public ResetMsg(byte[] bytes)
+        {
+            //start at 8 for all because first 8 are seq num and msgtype
+            int index = 8;
+            this.to = BytesToInt(GetSegment(index, 4, bytes)); index += 4;//4 bytes in int
+            this.from = BytesToInt(GetSegment(index, 4, bytes)); index += 4;
+        }
+        public byte[] GetBytes()
+        {
+            byte[] msg = Base();
+            msg = FinishMsg(msg);
             return msg;
         }
     }
