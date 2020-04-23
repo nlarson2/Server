@@ -12,11 +12,15 @@ public class GameManager : MonoBehaviour
     public double gameTime = 30.0f;
     bool resetCalled = false;
     double resetTimer = 0;
+    StoredServerData storedData;
 
     public Transform[] respawnPoints;
     // Start is called before the first frame update
     void Start()
     {
+        storedData = GameObject.Find("PassedData").GetComponent<StoredServerData>();
+        waitTime = storedData.pauseLimit;
+        gameTime = storedData.roundLimit;
         Debug.Log(count++);
         currentTime = 0;
     }

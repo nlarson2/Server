@@ -61,8 +61,13 @@ namespace SmashDomeVoxel
 
             mesh = new Mesh();
             GetComponent<MeshFilter>().mesh = mesh;
-
-            lines = File.ReadAllLines(this.inputfile);
+/*#if UNITY_STANDALONE_WIN
+            TextAsset txtAsset = (TextAsset)Resources.Load(this.inputfile, typeof(TextAsset));
+            string stuff = txtAsset.text;
+            lines = stuff.Split('\n');
+#else*/
+            lines = File.ReadAllLines(Application.dataPath + this.inputfile);
+//#endif
             string size = lines[0], scale = lines[1];
             this.scale = 1.0f;
             Int32.TryParse(size, out this.size);
