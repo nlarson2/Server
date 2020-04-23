@@ -850,19 +850,49 @@ namespace SmashDomeVoxel
         {
             for (int i = 0; i < 5; i++)
             {
-                voxel[y, x, z + i] = null;
-                voxel[y + 1, x - 1, z + i] = null;
-                voxel[y + 1, x, z + i] = null;
-                voxel[y + 2, x, z + i] = null;
-                voxel[y + 1, x + 1, z + i] = null;
-                voxel[y, x - 1, z + i] = null;
-                voxel[y, x + 1, z + i] = null;
-                voxel[y, x - 2, z + i] = null;
-                voxel[y, x + 2, z + i] = null;
-                voxel[y - 1, x - 1, z + i] = null;
-                voxel[y - 1, x, z + i] = null;
-                voxel[y - 2, x, z + i] = null;
-                voxel[y - 1, x + 1, z + i] = null;
+
+
+
+                voxel[y, x, z] = null;
+                voxel[y + 1, x, z] = null;
+                voxel[y + 1, x + 1, z] = null;
+                voxel[y + 1, x, z + 1] = null;
+                voxel[y + 1, x + 1, z + 1] = null;
+                voxel[y - 1, x, z] = null;
+                voxel[y - 1, x - 1, z] = null;
+                voxel[y - 1, x, z - 1] = null;
+                voxel[y - 1, x - 1, z - 1] = null;
+                voxel[y - 1, x+1, z] = null;
+                voxel[y - 1, x - 1, z+1] = null;
+                voxel[y - 1, x+1, z - 1] = null;
+                voxel[y - 1, x + 1, z - 1] = null;
+                voxel[y, x + 1, z] = null;
+                voxel[y, x - 1, z + 1] = null;
+                voxel[y, x + 1, z - 1] = null;
+                voxel[y, x + 1, z - 1] = null;
+                voxel[y , x, z] = null;
+                voxel[y , x + 1, z] = null;
+                voxel[y , x, z + 1] = null;
+                voxel[y , x + 1, z + 1] = null;
+                voxel[y , x, z] = null;
+                voxel[y , x - 1, z] = null;
+                voxel[y , x, z - 1] = null;
+                voxel[y , x - 1, z - 1] = null;
+
+
+                voxel[y, x, z + 1] = null;
+                voxel[y + 1, x - 1, z +1] = null;
+                voxel[y + 1, x, z + 1] = null;
+                voxel[y + 2, x, z + 1] = null;
+                voxel[y + 1, x + 1, z + 1] = null;
+                voxel[y, x - 1, z + 1] = null;
+                voxel[y, x + 1, z + 1] = null;
+                voxel[y, x - 2, z + 1] = null;
+                voxel[y, x + 2, z + 1] = null;
+                voxel[y - 1, x - 1, z + 1] = null;
+                voxel[y - 1, x+1, z + 1] = null;
+                voxel[y - 2, x+1, z + 1] = null;
+                voxel[y - 1, x + 1, z + 1] = null;
 
                 voxel[y + i, x, z + i] = null;
                 voxel[y + 1 + i, x - 1, z + i] = null;

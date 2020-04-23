@@ -1,0 +1,1 @@
+{"msgNum":92,"msgType":7,"from":34,"to":1,"playerType":0,"pos":{"x":10.430000305175782,"y":2.010999917984009,"z":-12.700000762939454},"verticeLength":84,"textureType":1,"triangleLength":126}

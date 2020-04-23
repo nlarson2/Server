@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -267,7 +268,8 @@ namespace SmashDomeNetwork
             msg = Join(msg, Vec3ToBytes(this.playerRotation.eulerAngles));
             msg = Join(msg, Vec3ToBytes(this.cameraRotation.eulerAngles));
             msg = FinishMsg(msg);
-            Debug.Log("GOT MOVE BYTES");
+            Debug.Log(msg.ToString());
+            Debug.Log(JsonUtility.ToJson(this));
             return msg;
         }
 
@@ -421,6 +423,7 @@ namespace SmashDomeNetwork
             return msg;
         }
     }
+    [Serializable]
     public class StructureChangeMsg : Message
     {
         public Vector3 pos;
@@ -428,6 +431,7 @@ namespace SmashDomeNetwork
         public int textureType = 0; // 0 defaults texture type to stone
 
         //using setter and getter to auto set length
+        [SerializeField]
         protected Vector3[] vertices;
         public Vector3[] Vertices
         {
@@ -443,6 +447,7 @@ namespace SmashDomeNetwork
         }
         public int triangleLength = 0;
         //using setter and getter to auto set length
+        [SerializeField]
         protected int[] triangles;
         public int[] Triangles
         {
@@ -501,6 +506,10 @@ namespace SmashDomeNetwork
                 msg = Join(msg, IntToBytes(this.triangles[i]));
             }
             msg = FinishMsg(msg);
+            Debug.Log($"Optimized Byte Length: {msg.Length})");
+            byte[] output = System.Text.ASCIIEncoding.ASCII.GetBytes(JsonUtility.ToJson(this));
+            
+            Debug.Log($"JSON Byte Length: {output.Length}");
             return msg;
         }
 

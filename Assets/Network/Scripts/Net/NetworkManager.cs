@@ -539,6 +539,7 @@ namespace SmashDomeNetwork
                         }
                         catch (Exception e)
                         {
+                            Debug.Log(e);
                             Debug.Log(string.Format("ERROR IN SNAPSHOT {0}", netobjects.Count));
                         }
                         //Snapshot(snapshot);
