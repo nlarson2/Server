@@ -8,8 +8,8 @@ public class GameManager : MonoBehaviour
     NetworkManager netManager;
     bool worldBreakable = false;
     double currentTime;
-    public double waitTime = 10.0f;
-    public double gameTime = 30.0f;
+    private double waitTime = 5.0f;
+    private double gameTime = 60.0f*10.0f;
     bool resetCalled = false;
     double resetTimer = 0;
     StoredServerData storedData;
